@@ -10,26 +10,47 @@ int main(void)
 	 */
 	enum
 	{
-		kSpinDelay = 400000,
+		kSpinDelay = 500,
 	};
 
 	volatile unsigned int *gDebugLedsMemoryMappedRegister = (unsigned int *)0x2000;
-	while (1)
-	{
-		*gDebugLedsMemoryMappedRegister = 0xFF;
+	while (1){
+		for (int t = 0; t < kSpinDelay; t++)
+		{
+			*gDebugLedsMemoryMappedRegister = 0xFF;
 
-		/*
-		 *	Spin
-		 */
-		for (int j = 0; j < kSpinDelay; j++)
-			;
+			/*
+			*	Spin
+			*/
+			for (int j = 0; j < t; j++)
+				;
 
-		*gDebugLedsMemoryMappedRegister = 0x00;
+			*gDebugLedsMemoryMappedRegister = 0x00;
 
-		/*
-		 *	Spin
-		 */
-		for (int j = 0; j < kSpinDelay; j++)
-			;
+			/*
+			*	Spin
+			*/
+			for (int j = t; j < kSpinDelay; j++)
+				;
+		}
+		for (int t = kSpinDelay; t > 0; t--)
+		{
+			*gDebugLedsMemoryMappedRegister = 0xFF;
+
+			/*
+			*	Spin
+			*/
+			for (int j = 0; j < t; j++)
+				;
+
+			*gDebugLedsMemoryMappedRegister = 0x00;
+
+			/*
+			*	Spin
+			*/
+			for (int j = t; j < kSpinDelay; j++)
+				;
+		}
 	}
+
 }
