@@ -1,5 +1,5 @@
 /*
-	Authored 2018-2019, Ryan Voo.
+	Authored 2019, Phillip Stanley-Marbell.
 
 	All rights reserved.
 	Redistribution and use in source and binary forms, with or without
@@ -34,32 +34,16 @@
 	POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-
 /*
- *	Description:
- *
- *		This module implements the control and status registers (CSRs).
+ *	7-bit RISC-V opcode field
  */
-
-
-
-module csr_file (clk, write, wrAddr_CSR, wrVal_CSR, rdAddr_CSR, rdVal_CSR);
-	input clk;
-	input write;
-	input [11:0] wrAddr_CSR;
-	input [31:0] wrVal_CSR;
-	input [11:0] rdAddr_CSR;
-	output reg[31:0] rdVal_CSR;
-
-	// reg [31:0] csr_file [0:2**10-1];
-
-	always @(posedge clk) begin
-		// if (write) begin
-		// 	csr_file[wrAddr_CSR] <= wrVal_CSR;
-		// end
-		// rdVal_CSR <= csr_file[rdAddr_CSR];
-		rdVal_CSR <= 32'b0;
-	end
-
-endmodule
+`define kRV32I_INSTRUCTION_OPCODE_LUI			7'b0110111
+`define kRV32I_INSTRUCTION_OPCODE_AUIPC			7'b0010111
+`define kRV32I_INSTRUCTION_OPCODE_JAL			7'b1101111
+`define kRV32I_INSTRUCTION_OPCODE_JALR			7'b1100111
+`define kRV32I_INSTRUCTION_OPCODE_BRANCH		7'b1100011
+`define kRV32I_INSTRUCTION_OPCODE_LOAD			7'b0000011
+`define kRV32I_INSTRUCTION_OPCODE_STORE			7'b0100011
+`define kRV32I_INSTRUCTION_OPCODE_IMMOP			7'b0010011
+`define kRV32I_INSTRUCTION_OPCODE_ALUOP			7'b0110011
+`define kRV32I_INSTRUCTION_OPCODE_CSRR			7'b1110011

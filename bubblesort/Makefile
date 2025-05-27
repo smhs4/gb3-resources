@@ -32,6 +32,8 @@ OBJS-SF		=\
 
 all:	$(PROGRAM) $(PROGRAM).sr $(PROGRAM-SF) $(PROGRAM-SF).sr Makefile
 
+nosf:	$(PROGRAM) $(PROGRAM).sr Makefile
+
 $(INIT).o: $(INIT).S
 	$(AS) $(ASFLAGS) $(INIT).S -o $(INIT).o
 
@@ -55,7 +57,7 @@ $(PROGRAM-SF): $(OBJS-SF)
 $(PROGRAM-SF).sr:$(PROGRAM-SF)
 	$(OBJCOPY) -O srec $(PROGRAM-SF) $@
 
-install: all
+install: nosf
 	mkdir -p $(GB3_ROOT)/processor/programs/
 	$(SREC2HEX) -b 16384 $(PROGRAM).sr
 	cp program.hex $(GB3_ROOT)/processor/programs/

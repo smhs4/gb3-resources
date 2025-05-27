@@ -24,3 +24,5 @@ shredded/
 **/*.i
 **/*.sr
 **/*.map
+**/*.dot
+**/*.py
