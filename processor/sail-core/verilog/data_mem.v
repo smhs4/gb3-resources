@@ -230,7 +230,7 @@ module data_mem (clk, addr, write_data, memwrite, memread, sign_mask, read_data,
 	 */
 	always @(posedge clk) begin
 		if(state == WRITE && addr_buf == 32'h2000) begin
-			led_reg <= write_data;
+			led_reg <= write_data_buffer;
 		end
 	end
 

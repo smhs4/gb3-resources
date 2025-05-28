@@ -87,7 +87,7 @@ module cpu(
 	/*
 	 *	Pipeline Registers
 	 */
-	wire [63:0]		if_id_out;
+	// wire [63:0]		if_id_out;
 	wire [11:0]		id_ex_out;
 	wire [154:0]		ex_mem_out;
 	wire [116:0]		mem_wb_out;
@@ -106,19 +106,19 @@ module cpu(
 	wire			Lui1;
 	wire			Auipc1;
 	wire			Fence_signal;
-	wire			CSRR_signal;
-	wire			CSRRI_signal;
+	// wire			CSRR_signal;
+	// wire			CSRRI_signal;
 
 
 
 	wire [4:0] 		if_inst_rs1 = if_inst_mux_out[19:15];
 	wire [4:0] 		if_inst_rs2 = if_inst_mux_out[24:20];
-	wire [11:0] 	if_rdcsr_addr = if_inst_mux_out[31:20];
+	// wire [11:0] 	if_rdcsr_addr = if_inst_mux_out[31:20];
 
 	/*
 	 *	Decode stage
 	 */
-	wire [31:0]		cont_mux_out; //control signal mux
+	wire [10:0]		cont_mux_out; //control signal mux
 	wire [31:0]		regA_out;
 	wire [31:0]		regB_out;
 	wire [31:0]		id_imm_out;
@@ -126,7 +126,7 @@ module cpu(
 	wire [31:0]		RegB_mux_out;
 	wire [4:0]		RegA_AddrFwdFlush_mux_out;
 	wire [4:0]		RegB_AddrFwdFlush_mux_out;
-	wire [31:0]		rdValOut_CSR;
+	// wire [31:0]		rdValOut_CSR;
 	wire [3:0]		id_dataMem_sign_mask;
 
 	wire [31:0] 	id_pc;
@@ -141,7 +141,7 @@ module cpu(
 	/*
 	 *	Execute stage
 	 */
-	wire [31:0]		ex_cont_mux_out;
+	wire [8:0]		ex_cont_mux_out;
 	wire [31:0]		ex_addr_adder_mux_out;
 	wire [31:0]		ex_alu_mux_out;
 	wire [31:0]		ex_addr_adder_sum;
@@ -255,15 +255,16 @@ module cpu(
 			.Lui(Lui1),
 			.Auipc(Auipc1),
 			.Fence(Fence_signal),
-			.CSRR(CSRR_signal)
+			.CSRR()
 		);
 
-	mux2to1 id_cont_mux(
-			.input0({21'b0, Jalr1, ALUSrc1, Lui1, Auipc1, Branch1, MemRead1, MemWrite1, CSRR_signal, RegWrite1, MemtoReg1, Jump1}),
-			.input1(32'b0),
-			.select(decode_ctrl_mux_sel),
-			.out(cont_mux_out)
-		);
+	// mux2to1 id_cont_mux(
+	// 		.input0({21'b0, Jalr1, ALUSrc1, Lui1, Auipc1, Branch1, MemRead1, MemWrite1, CSRR_signal, RegWrite1, MemtoReg1, Jump1}),
+	// 		.input1(32'b0),
+	// 		.select(decode_ctrl_mux_sel),
+	// 		.out(cont_mux_out)
+	// 	);
+	assign cont_mux_out = decode_ctrl_mux_sel ? 11'b0 : {Jalr1, ALUSrc1, Lui1, Auipc1, Branch1, MemRead1, MemWrite1, 1'b0, RegWrite1, MemtoReg1, Jump1};
 
 	regfile id_register_files(
 			.clk(clk),
@@ -292,28 +293,31 @@ module cpu(
 			.sign_mask(id_dataMem_sign_mask)
 		);
 
-	csr_file ControlAndStatus_registers(
-			.clk(clk),
-			.write(mem_wb_out[3]), //TODO
-			.wrAddr_CSR(mem_wb_out[116:105]),
-			.wrVal_CSR(mem_wb_out[35:4]),
-			.rdAddr_CSR(if_rdcsr_addr),
-			.rdVal_CSR(rdValOut_CSR)
-		);
+	// csr_file ControlAndStatus_registers(
+	// 		.clk(clk),
+	// 		.write(mem_wb_out[3]), //TODO
+	// 		.wrAddr_CSR(mem_wb_out[116:105]),
+	// 		.wrVal_CSR(mem_wb_out[35:4]),
+	// 		.rdAddr_CSR(if_rdcsr_addr),
+	// 		.rdVal_CSR(rdValOut_CSR)
+	// 	);
+	// assign rdValOut_CSR = 32'b0;
 
-	mux2to1 RegA_mux(
-			.input0(regA_out),
-			.input1({27'b0, id_instruction_rs1}),
-			.select(CSRRI_signal),
-			.out(RegA_mux_out)
-		);
+	// mux2to1 RegA_mux(
+	// 		.input0(regA_out),
+	// 		.input1({27'b0, id_instruction_rs1}),
+	// 		.select(CSRRI_signal),
+	// 		.out(RegA_mux_out)
+	// 	);
+	assign RegA_mux_out = regA_out;
 
-	mux2to1 RegB_mux(
-			.input0(regB_out),
-			.input1(rdValOut_CSR),
-			.select(CSRR_signal),
-			.out(RegB_mux_out)
-		);
+	// mux2to1 RegB_mux(
+	// 		.input0(regB_out),
+	// 		.input1(rdValOut_CSR),
+	// 		.select(CSRR_signal),
+	// 		.out(RegB_mux_out)
+	// 	);
+	assign RegB_mux_out = regB_out;
 
 	// mux2to1 RegA_AddrFwdFlush_mux( //TODO cleanup
 	// 		.input0({27'b0, id_instruction_rs1}),
@@ -321,7 +325,8 @@ module cpu(
 	// 		.select(CSRRI_signal),
 	// 		.out(RegA_AddrFwdFlush_mux_out)
 	// 	);
-	assign RegA_AddrFwdFlush_mux_out = CSRRI_signal ? 5'b0 : id_instruction_rs1;
+	// assign RegA_AddrFwdFlush_mux_out = CSRRI_signal ? 5'b0 : id_instruction_rs1;
+	assign RegA_AddrFwdFlush_mux_out = id_instruction_rs1;
 
 	// mux2to1 RegB_AddrFwdFlush_mux( //TODO cleanup
 	// 		.input0({27'b0, id_instruction_rs2}),
@@ -329,9 +334,11 @@ module cpu(
 	// 		.select(CSRR_signal),
 	// 		.out(RegB_AddrFwdFlush_mux_out)
 	// 	);
-	assign RegB_AddrFwdFlush_mux_out = CSRR_signal ? 5'b0 : id_instruction_rs2;
+	// assign RegB_AddrFwdFlush_mux_out = CSRR_signal ? 5'b0 : id_instruction_rs2;
+	assign RegB_AddrFwdFlush_mux_out = id_instruction_rs2;
 
-	assign CSRRI_signal = CSRR_signal & (id_inst[14]);
+	// assign CSRRI_signal = CSRR_signal & (id_inst[14]);
+	// assign CSRRI_signal = 1'b0;
 
 	wire [11:0] ex_inst_imm;
 	wire [4:0]	ex_inst_rd;
@@ -373,12 +380,13 @@ module cpu(
 	
 
 	//Execute stage
-	mux2to1 ex_cont_mux(
-			.input0({23'b0, id_ex_out[8:0]}),
-			.input1(32'b0),
-			.select(pcsrc),
-			.out(ex_cont_mux_out)
-		);
+	// mux2to1 ex_cont_mux(
+	// 		.input0({23'b0, id_ex_out[8:0]}),
+	// 		.input1(32'b0),
+	// 		.select(pcsrc),
+	// 		.out(ex_cont_mux_out)
+	// 	);
+	assign ex_cont_mux_out = pcsrc ? 12'b0 : id_ex_out;
 
 	mux2to1 ex_addr_adder_mux(
 			.input0(ex_pc),
@@ -405,20 +413,22 @@ module cpu(
 			.A(wb_fwd1_mux_out),
 			.B(ex_alu_mux_out),
 			.ALUOut(ex_alu_result),
-			.Branch_Enable(ex_alu_branch_enable)
+			.Branch_Enable(ex_alu_branch_enable),
+			.mem_address(data_mem_addr)
 		);
 
-	mux2to1 ex_lui_mux(
-			.input0(ex_alu_result),
-			.input1(ex_imm),
-			.select(id_ex_out[9]),
-			.out(ex_lui_result)
-		);
+	// mux2to1 ex_lui_mux(
+	// 		.input0(ex_alu_result),
+	// 		.input1(ex_imm),
+	// 		.select(id_ex_out[9]),
+	// 		.out(ex_lui_result)
+	// 	);
+	assign ex_lui_result = ex_alu_result;
 
 	//EX/MEM Pipeline Register
 	ex_mem ex_mem_reg(
 			.clk(clk),
-			.data_in({ex_inst_imm, ex_inst_rd, wb_fwd2_mux_out, ex_lui_result, ex_alu_branch_enable, ex_addr_adder_sum, ex_pc, ex_cont_mux_out[8:0]}),
+			.data_in({ex_inst_imm, ex_inst_rd, wb_fwd2_mux_out, ex_lui_result, ex_alu_branch_enable, ex_addr_adder_sum, ex_pc, ex_cont_mux_out}),
 			.data_out(ex_mem_out)
 		);
 
@@ -440,12 +450,13 @@ module cpu(
 			.out(auipc_mux_out)
 		);
 
-	mux2to1 mem_csrr_mux(
-			.input0(auipc_mux_out),
-			.input1(ex_mem_out[137:106]),
-			.select(ex_mem_out[3]),
-			.out(mem_csrr_mux_out)
-		);
+	// mux2to1 mem_csrr_mux(
+	// 		.input0(auipc_mux_out),
+	// 		.input1(ex_mem_out[137:106]),
+	// 		.select(ex_mem_out[3]),
+	// 		.out(mem_csrr_mux_out)
+	// 	);
+	assign mem_csrr_mux_out = auipc_mux_out;
 
 	//MEM/WB Pipeline Register
 	mem_wb mem_wb_reg(
@@ -471,17 +482,22 @@ module cpu(
 
 	//Forwarding Unit
 	ForwardingUnit forwarding_unit(
-			.rs1(ex_RegA_AddrFwdFlush_mux_out),
-			.rs2(ex_RegB_AddrFwdFlush_mux_out),
-			.MEM_RegWriteAddr(ex_mem_out[142:138]),
-			.WB_RegWriteAddr(mem_wb_out[104:100]),
-			.MEM_RegWrite(ex_mem_out[2]),
-			.WB_RegWrite(mem_wb_out[2]),
-			.EX_CSRR_Addr(ex_inst_imm),
-			.MEM_CSRR_Addr(ex_mem_out[154:143]),
-			.WB_CSRR_Addr(mem_wb_out[116:105]),
-			.MEM_CSRR(ex_mem_out[3]),
-			.WB_CSRR(mem_wb_out[3]),
+			.clk(clk),
+			.rs1(RegA_AddrFwdFlush_mux_out),
+			.rs2(RegB_AddrFwdFlush_mux_out),
+			// .MEM_RegWriteAddr(ex_mem_out[142:138]),
+			// .WB_RegWriteAddr(mem_wb_out[104:100]),
+			// .MEM_RegWrite(ex_mem_out[2]),
+			// .WB_RegWrite(mem_wb_out[2]),
+			.MEM_RegWriteAddr(ex_inst_rd),
+			.WB_RegWriteAddr(ex_mem_out[142:138]),
+			.MEM_RegWrite(ex_cont_mux_out[2]),
+			.WB_RegWrite(ex_mem_out[2]),
+			// .EX_CSRR_Addr(ex_inst_imm),
+			// .MEM_CSRR_Addr(ex_mem_out[154:143]),
+			// .WB_CSRR_Addr(mem_wb_out[116:105]),
+			// .MEM_CSRR(ex_mem_out[3]),
+			// .WB_CSRR(mem_wb_out[3]),
 			.MEM_fwd1(mfwd1),
 			.MEM_fwd2(mfwd2),
 			.WB_fwd1(wfwd1),
@@ -565,7 +581,7 @@ module cpu(
 	assign inst_mem_in = pc_out;
 
 	//Data Memory Connections
-	assign data_mem_addr = ex_lui_result;
+	// assign data_mem_addr = ex_lui_result;
 	assign data_mem_WrData = wb_fwd2_mux_out;
 	assign data_mem_memwrite = ex_cont_mux_out[4];
 	assign data_mem_memread = ex_cont_mux_out[5];

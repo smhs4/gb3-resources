@@ -88,8 +88,13 @@ module regfile(clk, write, wrAddr, wrData, rdAddrA, rdDataA, rdAddrB, rdDataB);
 	/*
 	 *	Sets register 0 to 0
 	 */
+	 integer i;
 	initial begin
-		regfile[0] = 32'b0;
+		
+		for (i = 0; i < 32; i = i+1) begin
+			regfile[i] = 32'b0;
+		end
+		// regfile[0] = 32'b0;
 	end
 
 	always @(posedge clk) begin

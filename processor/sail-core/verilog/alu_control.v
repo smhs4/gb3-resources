@@ -85,7 +85,7 @@ module ALUControl(FuncCode, ALUCtl, Opcode);
 			 *	LUI, U-Type
 			 */
 			`kRV32I_INSTRUCTION_OPCODE_LUI:
-				ALUCtl = 7'b0000010;
+				ALUCtl = 7'b0001100;
 
 			/*
 			 *	AUIPC, U-Type

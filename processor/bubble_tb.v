@@ -12,7 +12,7 @@ module top();
 	reg		ENCLKHF		= 1'b1;	// Plock enable
 	reg		CLKHF_POWERUP	= 1'b1;	// Power up the HFOSC circuit
 
-    reg [31:0] counter;
+    reg [31:0] cpu_clk_counter;
 
 
 	/*
@@ -53,10 +53,6 @@ module top();
 		.addr(inst_in), 
 		.out(inst_out)
 	);
-	// instruction_memory inst_mem( 
-	// 	.addr(counter), 
-	// 	.out(inst_out)
-	// );
 
 	data_mem data_mem_inst(
 			.clk(clk),
@@ -82,39 +78,38 @@ module top();
 
 
 	reg [10:0] counter2;
-	reg [31:0] counter3;
+	reg [31:0] clk_counter;
 
 	initial begin
 		$dumpoff;
 		$dumpfile ("bubble.vcd");
 		$dumpvars;
 		clk <= 0;
-		counter <= 0;
+		cpu_clk_counter <= 0;
 		counter2 <= 10;
-		counter3 <=0;
+		clk_counter <=0;
 	end
 
 	wire forcehalt;
-	assign forcehalt = counter > 32'h2dc6c00;
-	// assign forcehalt = (counter > 32'h4000) | (counter3 > 32'h10000);
-	wire forcehalt2;
-	assign forcehalt2 = counter > 32'h2dc6b00;
-	// assign forcehalt2 = counter > 1;
+	assign forcehalt = cpu_clk_counter > 32'h2dc6c00;
+	// assign forcehalt = (cpu_clk_counter > 32'h80) | (clk_counter > 32'h100);
+	wire dump_start;
+	assign dump_start = cpu_clk_counter > 32'h2dc6b00;
+	// assign dump_start = clk_counter > 1;
+
+	wire program_halt = |inst_in[31:20];
 	always @(posedge clk) begin
-		counter3 <= counter3+1;
+		clk_counter <= clk_counter+1;
 	end
 	always @(posedge clk_proc) begin
-		counter <= counter+1;
+		cpu_clk_counter <= cpu_clk_counter+1;
 		if (led[0]) begin
 			counter2 <= counter2+1;
 		end
 	end
-	always @(posedge forcehalt2 or posedge led[0]) begin
+	always @(posedge dump_start or posedge led[0]) begin
 		$dumpon;
 	end
-	// always @(posedge (prog_out == 2)) begin
-	// 	$dumpon;
-	// end
 	always @(posedge forcehalt or posedge counter2[5]) begin
 		$finish;
 	end
