@@ -1,3 +1,5 @@
 read_verilog verilog/id_ex.v verilog/ex_mem.v verilog/mem_wb.v verilog/cpu.v verilog/ALUControl.v verilog/if_id.v verilog/alu.v verilog/program_counter.v verilog/branch_decision.v verilog/ForwardingUnit.v verilog/branch_predictor.v verilog/imm_gen.v verilog/control.v verilog/instruction_memory.v verilog/data_mem.v verilog/regfile.v verilog/sign_mask_gen.v toplevel.v
 
+
+
 show -colors 1 -format dot

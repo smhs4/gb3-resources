@@ -6,8 +6,8 @@ GB3_ROOT = /gb3-resources
 TARGET-ARCH	= riscv32-elf
 TARGET		= riscv
 
-PROGRAM		= softwareblink
-PROGRAM-SF	= softwareblink-sf
+PROGRAM		= bubblesort
+PROGRAM-SF	= bubblesort-sf
 INIT		= init
 INIT-SF		= init-sf
 
@@ -32,6 +32,8 @@ OBJS-SF		=\
 
 all:	$(PROGRAM) $(PROGRAM).sr $(PROGRAM-SF) $(PROGRAM-SF).sr Makefile
 
+nosf:	$(PROGRAM) $(PROGRAM).sr Makefile
+
 $(INIT).o: $(INIT).S
 	$(AS) $(ASFLAGS) $(INIT).S -o $(INIT).o
 
@@ -42,6 +44,7 @@ $(PROGRAM).sr:$(PROGRAM)
 	$(OBJCOPY) -O srec $(PROGRAM) $@
 
 $(PROGRAM).o: $(PROGRAM).c Makefile
+	$(CC) $(CFLAGS) $(OPTFLAGS) -S -fverbose-asm $(INCLUDES) -c $(PROGRAM).c
 	$(CC) $(CFLAGS) $(OPTFLAGS) $(INCLUDES) -c $(PROGRAM).c
 
 
@@ -54,11 +57,12 @@ $(PROGRAM-SF): $(OBJS-SF)
 $(PROGRAM-SF).sr:$(PROGRAM-SF)
 	$(OBJCOPY) -O srec $(PROGRAM-SF) $@
 
-install: all
-	mkdir -p $(GB3_ROOT)/processor/programs/
-	$(SREC2HEX) -b 4096 $(PROGRAM).sr
-	cp program.hex $(GB3_ROOT)/processor/programs/
-	cp data.hex $(GB3_ROOT)/processor/programs/
+install: nosf
+	mkdir -p $(GB3_ROOT)/build/programs/
+	$(SREC2HEX) -b 16384 $(PROGRAM).sr
+	cp program.hex $(GB3_ROOT)/build/programs/
+	cp data.hex $(GB3_ROOT)/build/programs/
+	cp $(PROGRAM) $(GB3_ROOT)/build/programs/object
 
 clean:
 	$(RM) init.i *.o $(PROGRAM) $(PROGRAM).sr $(PROGRAM).map
