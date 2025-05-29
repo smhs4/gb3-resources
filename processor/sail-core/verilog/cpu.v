@@ -194,18 +194,20 @@ module cpu(
 	/*
 	 *	Instruction Fetch Stage
 	 */
-	mux2to1 pc_mux(
-			.input0(pc_mux0),
-			.input1(ex_mem_out[72:41]),
-			.select(pcsrc),
-			.out(pc_in)
-		);
+	// mux2to1 pc_mux(
+	// 		.input0(pc_mux0),
+	// 		.input1(ex_mem_out[72:41]),
+	// 		.select(pcsrc),
+	// 		.out(pc_in)
+	// 	);
+	assign pc_in = pcsrc ? ex_mem_out[72:41] : pc_mux0;
 
-	adder pc_adder(
-			.input1(32'b100),
-			.input2(pc_out),
-			.out(pc_adder_out)
-		);
+	// adder pc_adder(
+	// 		.input1(32'b100),
+	// 		.input2(pc_out),
+	// 		.out(pc_adder_out)
+	// 	);
+	assign pc_adder_out = 32'b100 + pc_out;
 
 	program_counter pc_latch(
 			.inAddr(pc_in),
@@ -213,20 +215,22 @@ module cpu(
 			.clk(clk)
 		);
 
-	mux2to1 inst_mux(
-			.input0(inst_mem_out),
-			.input1(32'b0),
-			.select(inst_mux_sel),
-			.out(if_inst_mux_out)
-		);
+	// mux2to1 inst_mux(
+	// 		.input0(inst_mem_out),
+	// 		.input1(32'b0),
+	// 		.select(inst_mux_sel),
+	// 		.out(if_inst_mux_out)
+	// 	);
+	assign if_inst_mux_out = inst_mux_sel ? 32'b0 : inst_mem_out;
 
 
-	mux2to1 fence_mux(
-			.input0(pc_adder_out),
-			.input1(pc_out),
-			.select(Fence_signal),
-			.out(fence_mux_out)
-		);
+	// mux2to1 fence_mux(
+	// 		.input0(pc_adder_out),
+	// 		.input1(pc_out),
+	// 		.select(Fence_signal),
+	// 		.out(fence_mux_out)
+	// 	);
+	assign fence_mux_out = Fence_signal ? pc_out : pc_adder_out;
 
 	/*
 	 *	IF/ID Pipeline Register
@@ -254,8 +258,8 @@ module cpu(
 			.Jalr(Jalr1),
 			.Lui(Lui1),
 			.Auipc(Auipc1),
-			.Fence(Fence_signal),
-			.CSRR()
+			.Fence(Fence_signal)
+			// .CSRR()
 		);
 
 	// mux2to1 id_cont_mux(
@@ -388,25 +392,28 @@ module cpu(
 	// 	);
 	assign ex_cont_mux_out = pcsrc ? 12'b0 : id_ex_out;
 
-	mux2to1 ex_addr_adder_mux(
-			.input0(ex_pc),
-			.input1(wb_fwd1_mux_out),
-			.select(id_ex_out[11]),
-			.out(ex_addr_adder_mux_out)
-		);
+	// mux2to1 ex_addr_adder_mux(
+	// 		.input0(ex_pc),
+	// 		.input1(wb_fwd1_mux_out),
+	// 		.select(id_ex_out[11]),
+	// 		.out(ex_addr_adder_mux_out)
+	// 	);
+	assign ex_addr_adder_mux_out = id_ex_out[11] ? wb_fwd1_mux_out : ex_pc;
 
-	adder ex_addr_adder(
-			.input1(ex_addr_adder_mux_out),
-			.input2(ex_imm),
-			.out(ex_addr_adder_sum)
-		);
+	// adder ex_addr_adder(
+	// 		.input1(ex_addr_adder_mux_out),
+	// 		.input2(ex_imm),
+	// 		.out(ex_addr_adder_sum)
+	// 	);
+	assign ex_addr_adder_sum = ex_addr_adder_mux_out + ex_imm;
 
-	mux2to1 ex_alu_mux(
-			.input0(wb_fwd2_mux_out),
-			.input1(ex_imm),
-			.select(id_ex_out[10]),
-			.out(ex_alu_mux_out)
-		);
+	// mux2to1 ex_alu_mux(
+	// 		.input0(wb_fwd2_mux_out),
+	// 		.input1(ex_imm),
+	// 		.select(id_ex_out[10]),
+	// 		.out(ex_alu_mux_out)
+	// 	);
+	assign ex_alu_mux_out = id_ex_out[10] ? ex_imm : wb_fwd2_mux_out;
 
 	alu ex_alu_main(
 			.ALUctl(ex_alu_ctl),
@@ -443,12 +450,13 @@ module cpu(
 			.Branch_Jump_Trigger(pcsrc)
 		);
 
-	mux2to1 auipc_mux(
-			.input0(ex_mem_out[105:74]),
-			.input1(ex_mem_out[72:41]),
-			.select(ex_mem_out[8]),
-			.out(auipc_mux_out)
-		);
+	// mux2to1 auipc_mux(
+	// 		.input0(ex_mem_out[105:74]),
+	// 		.input1(ex_mem_out[72:41]),
+	// 		.select(ex_mem_out[8]),
+	// 		.out(auipc_mux_out)
+	// 	);
+	assign auipc_mux_out = ex_mem_out[8] ? ex_mem_out[72:41] : ex_mem_out[105:74];
 
 	// mux2to1 mem_csrr_mux(
 	// 		.input0(auipc_mux_out),
@@ -466,19 +474,21 @@ module cpu(
 		);
 
 	//Writeback to Register Stage
-	mux2to1 wb_mux(
-			.input0(mem_wb_out[67:36]),
-			.input1(mem_wb_out[99:68]),
-			.select(mem_wb_out[1]),
-			.out(wb_mux_out)
-		);
+	// mux2to1 wb_mux(
+	// 		.input0(mem_wb_out[67:36]),
+	// 		.input1(mem_wb_out[99:68]),
+	// 		.select(mem_wb_out[1]),
+	// 		.out(wb_mux_out)
+	// 	);
+	assign wb_mux_out = mem_wb_out[1] ? mem_wb_out[99:68] : mem_wb_out[67:36];
 
-	mux2to1 reg_dat_mux( //TODO cleanup
-			.input0(mem_regwb_mux_out),
-			.input1(ex_pc),
-			.select(ex_mem_out[0]),
-			.out(reg_dat_mux_out)
-		);
+	// mux2to1 reg_dat_mux( //TODO cleanup
+	// 		.input0(mem_regwb_mux_out),
+	// 		.input1(ex_pc),
+	// 		.select(ex_mem_out[0]),
+	// 		.out(reg_dat_mux_out)
+	// 	);
+	assign reg_dat_mux_out = ex_mem_out[0] ? ex_pc : mem_regwb_mux_out;
 
 	//Forwarding Unit
 	ForwardingUnit forwarding_unit(
@@ -504,40 +514,45 @@ module cpu(
 			.WB_fwd2(wfwd2)
 		);
 
-	mux2to1 mem_fwd1_mux(
-			.input0(ex_RegA_mux_out),
-			.input1(dataMemOut_fwd_mux_out),
-			.select(mfwd1),
-			.out(mem_fwd1_mux_out)
-		);
+	// mux2to1 mem_fwd1_mux(
+	// 		.input0(ex_RegA_mux_out),
+	// 		.input1(dataMemOut_fwd_mux_out),
+	// 		.select(mfwd1),
+	// 		.out(mem_fwd1_mux_out)
+	// 	);
+	assign mem_fwd1_mux_out = mfwd1 ? dataMemOut_fwd_mux_out : ex_RegA_mux_out;
 
-	mux2to1 mem_fwd2_mux(
-			.input0(ex_RegB_mux_out),
-			.input1(dataMemOut_fwd_mux_out),
-			.select(mfwd2),
-			.out(mem_fwd2_mux_out)
-		);
+	// mux2to1 mem_fwd2_mux(
+	// 		.input0(ex_RegB_mux_out),
+	// 		.input1(dataMemOut_fwd_mux_out),
+	// 		.select(mfwd2),
+	// 		.out(mem_fwd2_mux_out)
+	// 	);
+	assign mem_fwd2_mux_out = mfwd2 ? dataMemOut_fwd_mux_out : ex_RegB_mux_out;
 
-	mux2to1 wb_fwd1_mux(
-			.input0(mem_fwd1_mux_out),
-			.input1(wb_mux_out),
-			.select(wfwd1),
-			.out(wb_fwd1_mux_out)
-		);
+	// mux2to1 wb_fwd1_mux(
+	// 		.input0(mem_fwd1_mux_out),
+	// 		.input1(wb_mux_out),
+	// 		.select(wfwd1),
+	// 		.out(wb_fwd1_mux_out)
+	// 	);
+	assign wb_fwd1_mux_out = wfwd1 ? wb_mux_out : mem_fwd1_mux_out;
 
-	mux2to1 wb_fwd2_mux(
-			.input0(mem_fwd2_mux_out),
-			.input1(wb_mux_out),
-			.select(wfwd2),
-			.out(wb_fwd2_mux_out)
-		);
+	// mux2to1 wb_fwd2_mux(
+	// 		.input0(mem_fwd2_mux_out),
+	// 		.input1(wb_mux_out),
+	// 		.select(wfwd2),
+	// 		.out(wb_fwd2_mux_out)
+	// 	);
+	assign wb_fwd2_mux_out = wfwd2 ? wb_mux_out : mem_fwd2_mux_out;
 
-	mux2to1 dataMemOut_fwd_mux(
-			.input0(ex_mem_out[105:74]),
-			.input1(data_mem_out),
-			.select(ex_mem_out[1]),
-			.out(dataMemOut_fwd_mux_out)
-		);
+	// mux2to1 dataMemOut_fwd_mux(
+	// 		.input0(ex_mem_out[105:74]),
+	// 		.input1(data_mem_out),
+	// 		.select(ex_mem_out[1]),
+	// 		.out(dataMemOut_fwd_mux_out)
+	// 	);
+	assign dataMemOut_fwd_mux_out = ex_mem_out[1] ? data_mem_out : ex_mem_out[105:74];
 
 	//Branch Predictor
 	branch_predictor branch_predictor_FSM(
@@ -551,27 +566,30 @@ module cpu(
 			.prediction(predict)
 		);
 
-	mux2to1 branch_predictor_mux(
-			.input0(fence_mux_out),
-			.input1(branch_predictor_addr),
-			.select(predict),
-			.out(branch_predictor_mux_out)
-		);
+	// mux2to1 branch_predictor_mux(
+	// 		.input0(fence_mux_out),
+	// 		.input1(branch_predictor_addr),
+	// 		.select(predict),
+	// 		.out(branch_predictor_mux_out)
+	// 	);
+	assign branch_predictor_mux_out = predict ? branch_predictor_addr : fence_mux_out;
 
-	mux2to1 mistaken_branch_mux(
-			.input0(branch_predictor_mux_out),
-			.input1(ex_pc),
-			.select(mistake_trigger),
-			.out(pc_mux0)
-		);
+	// mux2to1 mistaken_branch_mux(
+	// 		.input0(branch_predictor_mux_out),
+	// 		.input1(ex_pc),
+	// 		.select(mistake_trigger),
+	// 		.out(pc_mux0)
+	// 	);
+	assign pc_mux0 = mistake_trigger ? ex_pc : branch_predictor_mux_out;
 
 	//A copy of the writeback mux, but in MEM stage //TODO move back and cleanup
-	mux2to1 mem_regwb_mux(
-			.input0(mem_csrr_mux_out),
-			.input1(data_mem_out),
-			.select(ex_mem_out[1]),
-			.out(mem_regwb_mux_out)
-		);
+	// mux2to1 mem_regwb_mux(
+	// 		.input0(mem_csrr_mux_out),
+	// 		.input1(data_mem_out),
+	// 		.select(ex_mem_out[1]),
+	// 		.out(mem_regwb_mux_out)
+	// 	);
+	assign mem_regwb_mux_out = ex_mem_out[1] ? data_mem_out : mem_csrr_mux_out;
 
 	//OR gate assignments, used for flushing
 	assign decode_ctrl_mux_sel = pcsrc | mistake_trigger;

@@ -10,7 +10,6 @@
 # vscode and mac specific files
 .vscode/**
 .DS_Store**
-shredded/
 
 **build/**
 
@@ -24,5 +23,3 @@ shredded/
 **/*.i
 **/*.sr
 **/*.map
-**/*.dot
-**/*.py
