@@ -1,0 +1,7 @@
+read_verilog top.v
+read_verilog verilog/cpu_core.v
+read_verilog verilog/d_flip_flop.v
+
+synth_ice40 -noflatten -blif build/dragonfly_v.blif
+
+write_json build/dragonfly_v.json
