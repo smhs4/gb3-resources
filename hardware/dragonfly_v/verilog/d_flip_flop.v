@@ -2,21 +2,21 @@ module d_flip_flop #(
     parameter WIDTH = 32,
     parameter RESET_VALUE = 0
 ) (
-    clk,
+    clock,
     reset,
-    data_in,
-    data_out
+    in,
+    out
 );
-    input               clk;
+    input               clock;
     input               reset;      //active high
-    input   [WIDTH-1:0] data_in;
-    output reg[WIDTH-1:0] data_out;
+    input   [WIDTH-1:0] in;
+    output reg[WIDTH-1:0] out;
 
-    always @(posedge clk) begin
+    always @(posedge clock) begin
         if (reset) begin
-            data_out <= RESET_VALUE;
+            out <= RESET_VALUE;
         end else begin
-            data_out <= data_in;
+            out <= in;
         end
     end
 endmodule

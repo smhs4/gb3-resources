@@ -1,6 +1,7 @@
 read_verilog top.v
 read_verilog verilog/cpu_core.v
 read_verilog verilog/d_flip_flop.v
+read_verilog verilog/regfile.v
 
 synth_ice40 -noflatten -blif build/dragonfly_v.blif
 

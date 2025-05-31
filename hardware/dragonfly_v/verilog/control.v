@@ -35,73 +35,50 @@
 */
 
 
+
 /*
- *	top.v
- *
- *	Top level entity, linking cpu with data and instruction memory.
+ *	RISC-V CONTROL UNIT
  */
-
-module top (led);
-	output [7:0]	led;
-
-	wire		clk_proc;
-	wire		data_clk_stall;
-	
-	wire		clk;
-	reg		ENCLKHF		= 1'b1;	// Plock enable
-	reg		CLKHF_POWERUP	= 1'b1;	// Power up the HFOSC circuit
-
-
-	/*
-	 *	Use the iCE40's hard primitive for the clock source.
-	 */
-	SB_HFOSC #(.CLKHF_DIV("0b10")) OSCInst0 (
-		.CLKHFEN(ENCLKHF),
-		.CLKHFPU(CLKHF_POWERUP),
-		.CLKHF(clk)
+module control(
+		clock,
+		opcode,
+		RegWrite,
+		data_mem_write,
+		data_mem_read,
+		Branch,
+		ALUSrc,
+		Jump,
+		Jalr,
+		Lui,
+		Auipc,
+		// Fence,
 	);
 
-	/*
-	 *	Memory interface
-	 */
-	wire[31:0]	inst_in;
-	wire[31:0]	inst_out;
-	wire[31:0]	data_out;
-	wire[31:0]	data_addr;
-	wire[31:0]	data_WrData;
-	wire		data_memwrite;
-	wire		data_memread;
-	wire[3:0]	data_sign_mask;
+	input 			clock;
+	input	[6:0] 	opcode;
+	output reg RegWrite;
+	output reg data_mem_write;
+	output reg data_mem_read;
+	output reg Branch;
+	output reg ALUSrc;
+	output reg Jump;
+	output reg Jalr;
+	output reg Lui;
+	output reg Auipc;
+	// output reg Fence;
 
+	always @(posedge clock) begin
+	RegWrite <= (~(opcode[4] | opcode[5])) | opcode[2] | opcode[4];
+	data_mem_write <= (~opcode[6]) & (opcode[5]) & (~opcode[4]);	//010xx matching 01000(STORE) 01001(FP-SW) 01011(ATOMIC) 01010(unknown)
+	data_mem_read <= (~opcode[5]) & (~opcode[4]) & (~opcode[3]);	//x000x matching 00000(LOAD) 00001(FP-LW) 10000 10001(unknown)
+	Branch <= (opcode[6]) & (~opcode[4]) & (~opcode[2]);			//1x0x0 matching 10000 (unknown) 10010 (unknown) 11000 (BRANCH) 11010 (unknown)
+	ALUSrc <= ~(opcode[6] | opcode[4]) | (~opcode[5]) | ((~opcode[6]) & opcode[5] & opcode[4] & opcode[2]);
+	Jump <= (opcode[6]) & (opcode[5]) & (~opcode[4]) & (opcode[2]);	//110x1	matching 11001 (JALR) 11011 (JAL)
 
-	cpu processor(
-		.clk(clk_proc),
-		.inst_mem_in(inst_in),
-		.inst_mem_out(inst_out),
-		.data_mem_out(data_out),
-		.data_mem_addr(data_addr),
-		.data_mem_WrData(data_WrData),
-		.data_mem_memwrite(data_memwrite),
-		.data_mem_memread(data_memread),
-		.data_mem_sign_mask(data_sign_mask)
-	);
+	Jalr <= (opcode[6]) & (opcode[5]) & (~opcode[4]) & (~opcode[3]) & (opcode[2]);		//11001 JALR
+	Lui <= (~opcode[6]) & (opcode[5]) & (opcode[4]) & (~opcode[3]) & (opcode[2]);		//01101 LUI
+	Auipc <= (~opcode[6]) & (~opcode[5]) & (opcode[4]) & (~opcode[3]) & (opcode[2]);	//00101 AUIPC
+	// Fence <= (~opcode[5]) & opcode[3] & (opcode[2]);
+	end
 
-	instruction_memory inst_mem( 
-		.addr(inst_in), 
-		.out(inst_out)
-	);
-
-	data_mem data_mem_inst(
-			.clk(clk),
-			.addr(data_addr),
-			.write_data(data_WrData),
-			.memwrite(data_memwrite), 
-			.memread(data_memread), 
-			.read_data(data_out),
-			.sign_mask(data_sign_mask),
-			.led(led),
-			.clk_stall(data_clk_stall)
-		);
-
-	assign clk_proc = (data_clk_stall) ? 1'b1 : clk;
 endmodule

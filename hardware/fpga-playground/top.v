@@ -41,7 +41,9 @@ module top(led);
 		.addr_out(data_addr)
 	);
 
-	wire [13:0] addr = count[0] ? count[15:2] : data_addr[18:5];
+	wire [13:0] addr = count[0] ? //something
+	count[15:2] : // something
+	data_addr[18:5];
 
     SB_SPRAM256KA blk0(
         .CLOCK(clk),
