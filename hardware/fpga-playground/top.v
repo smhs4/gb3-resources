@@ -5,7 +5,7 @@ module top(led);
 
 	wire		clk;
 	reg		LEDstatus = 1;
-	reg [18:0]	count = 0;
+	reg [31:0]	count = 0;
 
 	reg [31:0] addr_src1;
 	reg [31:0] addr_src2;
@@ -16,7 +16,7 @@ module top(led);
 	end
 
 	wire [31:0] rddata;
-	wire [31:0] outdata;
+	wire [15:0] outdata;
 
 	wire [3:0] select = count[18:15];
 	/*
@@ -29,55 +29,59 @@ module top(led);
 		.CLKHF(clk)
 	);
 
+	
+
 	defparam OSCInst0.CLKHF_DIV = "0b01";
 	/*
 	 *	Blinks LED at approximately 1Hz. The constant kFofE_CLOCK_DIVIDER_FOR_1Hz
 	 *	(defined above) is calibrated to yield a blink rate of about 1Hz.
 	 */
 	wire [18:0] data_addr;
-	agu agu(
-		.addr1(addr_src1),
-		.addr2(addr_src2),
-		.addr_out(data_addr)
-	);
+	// agu agu(
+	// 	.addr1(addr_src1),
+	// 	.addr2(addr_src2),
+	// 	.addr_out(data_addr)
+	// );
 
-	wire [13:0] addr = count[0] ? //something
-	count[15:2] : // something
-	data_addr[18:5];
+	wire [31:0] addr = addr_src1 + count;//count[0] ? //something
+	// count[15:2] : // something
+	// data_addr[18:5];
 
-    SB_SPRAM256KA blk0(
-        .CLOCK(clk),
-        .ADDRESS(addr),
-        .DATAIN(count[15:0]),
-        .DATAOUT(rddata[15:0]),
-        .MASKWREN(4'b1),
-        .WREN(1'b0),
-        .CHIPSELECT(1'b1),
-        .STANDBY(1'b0),
-        .SLEEP(1'b0),
-        .POWEROFF(1'b1)
-	);
-    SB_SPRAM256KA blk1(
-        .CLOCK(clk),
-        .ADDRESS(count),
-        .DATAIN(count[15:0]),
-        .DATAOUT(rddata[31:16]),
-        .MASKWREN(4'b1),
-        .WREN(1'b0),
-        .CHIPSELECT(1'b1),
-        .STANDBY(1'b0),
-        .SLEEP(1'b0),
-        .POWEROFF(1'b1)
-	);
-	wire [18:0] nextcount = count + 1;
-	assign outdata = {24'b0,select[2] ? (select[3] ? rddata[31:24] : rddata[15:8]) : (select[3] ? rddata [23:16] : rddata[7:0])};
+    // SB_SPRAM256KA blk0(
+    //     .CLOCK(clk),
+    //     .ADDRESS(addr),
+    //     .DATAIN(count[15:0]),
+    //     .DATAOUT(rddata[15:0]),
+    //     .MASKWREN(4'b1),
+    //     .WREN(1'b0),
+    //     .CHIPSELECT(1'b1),
+    //     .STANDBY(1'b0),
+    //     .SLEEP(1'b0),
+    //     .POWEROFF(1'b1)
+	// );
+    // SB_SPRAM256KA blk1(
+    //     .CLOCK(clk),
+    //     .ADDRESS(count),
+    //     .DATAIN(count[15:0]),
+    //     .DATAOUT(rddata[31:16]),
+    //     .MASKWREN(4'b1),
+    //     .WREN(1'b0),
+    //     .CHIPSELECT(1'b1),
+    //     .STANDBY(1'b0),
+    //     .SLEEP(1'b0),
+    //     .POWEROFF(1'b1)
+	// );
+	// wire [15:0] nextcount = outdata + 1;
+	// // assign outdata = select[2] ? rddata[31:16] : rddata[15:0];
+	// assign outdata = rddata[15:0];
+	// assign outdata = {24'b0,select[2] ? (select[3] ? rddata[31:24] : rddata[15:8]) : (select[3] ? rddata [23:16] : rddata[7:0])};
 	always @(posedge clk) begin
 		// if (count > `kFofE_HFOSC_CLOCK_DIVIDER_FOR_1Hz) begin
 		// 	LEDstatus <= !LEDstatus;
 		// 	count <= 12345;
 		// end
 		// else begin
-		count <= ~count;
+		count <= count+1;
 		addr_src2 <= ~addr_src1;
 		addr_src1 <= addr_src2;
 
@@ -87,5 +91,5 @@ module top(led);
 	/*
 	 *	Assign output led to value in LEDstatus register
 	 */
-	assign	led = outdata[0];
+	assign	led = addr[31];
 endmodule

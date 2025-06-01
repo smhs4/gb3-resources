@@ -42,43 +42,56 @@
 module control(
 		clock,
 		opcode,
+		flush,
 		RegWrite,
 		data_mem_write,
 		data_mem_read,
 		Branch,
 		ALUSrc,
-		Jump,
+		// Jump,
 		Jalr,
-		Lui,
-		Auipc,
+		// Lui,
+		// Auipc,
+		Jal,
+		id_branch,
+		ex_is_pc
 		// Fence,
 	);
 
 	input 			clock;
 	input	[6:0] 	opcode;
+
 	output reg RegWrite;
 	output reg data_mem_write;
 	output reg data_mem_read;
 	output reg Branch;
 	output reg ALUSrc;
-	output reg Jump;
+	// output reg Jump;
 	output reg Jalr;
-	output reg Lui;
-	output reg Auipc;
+
+	output reg ex_is_pc;
+	// output reg Lui;
+	// output reg Auipc;
 	// output reg Fence;
 
-	always @(posedge clock) begin
-	RegWrite <= (~(opcode[4] | opcode[5])) | opcode[2] | opcode[4];
-	data_mem_write <= (~opcode[6]) & (opcode[5]) & (~opcode[4]);	//010xx matching 01000(STORE) 01001(FP-SW) 01011(ATOMIC) 01010(unknown)
-	data_mem_read <= (~opcode[5]) & (~opcode[4]) & (~opcode[3]);	//x000x matching 00000(LOAD) 00001(FP-LW) 10000 10001(unknown)
-	Branch <= (opcode[6]) & (~opcode[4]) & (~opcode[2]);			//1x0x0 matching 10000 (unknown) 10010 (unknown) 11000 (BRANCH) 11010 (unknown)
-	ALUSrc <= ~(opcode[6] | opcode[4]) | (~opcode[5]) | ((~opcode[6]) & opcode[5] & opcode[4] & opcode[2]);
-	Jump <= (opcode[6]) & (opcode[5]) & (~opcode[4]) & (opcode[2]);	//110x1	matching 11001 (JALR) 11011 (JAL)
+	output Jal;
+	output id_branch;
+	assign Jal = opcode[5] & opcode[3];
+	assign id_branch = (opcode[6]) & (~opcode[4]) & (~opcode[2]);
 
-	Jalr <= (opcode[6]) & (opcode[5]) & (~opcode[4]) & (~opcode[3]) & (opcode[2]);		//11001 JALR
-	Lui <= (~opcode[6]) & (opcode[5]) & (opcode[4]) & (~opcode[3]) & (opcode[2]);		//01101 LUI
-	Auipc <= (~opcode[6]) & (~opcode[5]) & (opcode[4]) & (~opcode[3]) & (opcode[2]);	//00101 AUIPC
+	always @(posedge clock) begin
+	RegWrite <= ((~opcode[5]) | ((~opcode[6]) & opcode[4]) | opcode[2]) & (~flush); //confirmed
+	data_mem_write <= ((~opcode[6]) & (opcode[5]) & (~opcode[4])) & (~flush);	//confirmed 010xx matching 01000(STORE) 01001(FP-SW) 01011(ATOMIC) 01010(unknown)
+	data_mem_read <= (~opcode[5]) & (~opcode[4]) & (~opcode[3]);	//confirmed x000x matching 00000(LOAD) 00001(FP-LW) 10000 10001(unknown)
+	Branch <= ((opcode[6]) & (~opcode[4]) & (~opcode[2])) & (~flush);//confirmed1x0x0 matching 10000 (unknown) 10010 (unknown) 11000 (BRANCH) 11010 (unknown)
+	ALUSrc <= (~opcode[5]) | opcode[2];//confirmed
+	// Jump <= (opcode[6]) & (opcode[5]) & (~opcode[4]) & (opcode[2]);	//110x1	matching 11001 (JALR) 11011 (JAL)
+
+	Jalr <= ((opcode[6]) & (opcode[5]) & (~opcode[4]) & (~opcode[3]) & (opcode[2])) & (~flush);		//11001 JALR
+	// Lui <= (~opcode[6]) & (opcode[5]) & (opcode[4]) & (~opcode[3]) & (opcode[2]);		//01101 LUI
+	// Auipc <= (~opcode[6]) & (~opcode[5]) & (opcode[4]) & (~opcode[3]) & (opcode[2]);	//00101 AUIPC
 	// Fence <= (~opcode[5]) & opcode[3] & (opcode[2]);
+	ex_is_pc <= opcode[2] & (~(opcode[5] | opcode[4]));
 	end
 
 endmodule
