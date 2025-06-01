@@ -124,21 +124,10 @@ module alu(ALUctl, A, B, alu_result, branch_enable);
 			 *	XOR (the fields also match other XOR variants)
 			 */
 			`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_XOR:	not_adder = A ^ B;
-
 			/*
-			 *	CSRRW  only
+			 *	JAL and JALR
 			 */
-			`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_CSRRW:	not_adder = A;
-
-			/*
-			 *	CSRRS only
-			 */
-			`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_CSRRS:	not_adder = A | B;
-
-			/*
-			 *	CSRRC only
-			 */
-			`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_CSRRC:	not_adder = (~A) & B;
+			`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_ILLEGAL:	not_adder = A;
 
 			/*
 			 *	Should never happen.

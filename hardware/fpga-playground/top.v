@@ -1,7 +1,8 @@
 `define	kFofE_HFOSC_CLOCK_DIVIDER_FOR_1Hz	100000
 
-module top(led);
+module top(led,reset);
 	output		led;
+	input		reset;
 
 	wire		clk;
 	reg		LEDstatus = 1;
@@ -75,16 +76,21 @@ module top(led);
 	// // assign outdata = select[2] ? rddata[31:16] : rddata[15:0];
 	// assign outdata = rddata[15:0];
 	// assign outdata = {24'b0,select[2] ? (select[3] ? rddata[31:24] : rddata[15:8]) : (select[3] ? rddata [23:16] : rddata[7:0])};
-	always @(posedge clk) begin
+	always @(posedge clk or posedge reset) begin
 		// if (count > `kFofE_HFOSC_CLOCK_DIVIDER_FOR_1Hz) begin
 		// 	LEDstatus <= !LEDstatus;
 		// 	count <= 12345;
 		// end
 		// else begin
-		count <= count+1;
-		addr_src2 <= ~addr_src1;
-		addr_src1 <= addr_src2;
-
+		if(reset)begin
+			count <=0;
+			addr_src2 <=0;
+			addr_src1 <=0;
+		end else begin
+			count <= count+1;
+			addr_src2 <= ~addr_src1;
+			addr_src1 <= addr_src2;
+		end
 		// end
 	end
 

@@ -23,6 +23,7 @@ module top(
     wire [31:0] data_address;
 
     wire        data_write_enable;
+    wire [2:0]  data_mode;
 
 	SB_HFOSC #(.CLKHF_DIV("0b11")) OSCInst0 (
 		.CLKHFEN(1'b1),
@@ -51,7 +52,7 @@ module top(
         .data_address(data_address),
         .data_out(data_core_to_mem),
         .data_in(data_mem_to_core),
-        .data_mode(),
+        .data_mode(data_mode),
         .data_write_enable(data_write_enable)
     );
 
@@ -59,6 +60,15 @@ module top(
         .clock(core_clock),
         .addr(instruction_address),
         .out(instruction_mem_to_core)
+    );
+
+    data_memory data_memory(
+        .clock(core_clock),
+        .address(data_address),
+        .data_in(data_core_to_mem),
+        .data_out(data_mem_to_core),
+        .write_enable(data_write_enable),
+        .mode(data_mode)
     );
 
 

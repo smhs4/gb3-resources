@@ -50,6 +50,15 @@ module cpu_core(
     wire [31:0] id_instruction = instruction_in;
     wire [4:0]  id_rs1 = id_instruction[19:15];
     wire [4:0]  id_rs2 = id_instruction[24:20];
+    wire [6:0]  id_opcode = id_instruction[6:0];
+    wire [2:0]  id_funct3 = id_instruction[14:12];
+    
+    d_flip_flop #(.WIDTH(1)) id_ex_data_mode_reg(
+        .clock(core_clock),
+        .reset(reset),
+        .in(id_funct3),
+        .out(data_mode)
+    );
 
     regfile id_integer_registers(
         .clock(core_clock),
@@ -62,41 +71,41 @@ module cpu_core(
         .rs2_data(ex_rs2_data)
     );
 
-    wire [31:0] id_imm;
-    imm_gen id_immediate_generator(
+    imm_gen id_immediate_generator(//TODO
         .inst(id_instruction),
-        .imm(id_imm)
+        .id_jump_offset(id_jump_offset)
     );
 
     wire ex_is_ld;
     wire ex_is_pc_instruction;          //PC into ALU: AUIPC(00101), JAL(11011), JALR(11001)
     wire ex_is_imm_instruction;         //IMM into ALU: ALU-imm arithmetic(00100), LUI(01101), AUIPC(00101), JAL(11011), JALR(11001)
-                                        /*load(00000), store(01000) are x
-                                        00000
-                                        00100
-                                        0X101
-                                        01000
-                                        11001
-                                        */
     wire ex_is_branch;
     wire ex_is_jalr;
     wire id_is_jal;
     wire id_is_branch;
+    wire id_mux_next_pc;
 
     control id_control_unit(
         .clock(core_clock),
-        .opcode(id_instruction[6:0]),
+        .opcode(id_opcode),
         .data_mem_write(data_write_enable),
         .data_mem_read(ex_is_ld),
         .ALUSrc(ex_is_imm_instruction),
-
         .Branch(ex_is_branch),
         .Jalr(ex_is_jalr),
         .Jal(id_is_jal),
         .id_branch(id_is_branch),
-        .ex_is_pc(ex_is_pc_instruction)
+        .ex_is_pc(ex_is_pc_instruction),
+        .Jump(id_mux_next_pc)
+    );
 
-        //TODO customize signals
+    wire [6:0] ex_alu_control;
+    ALUControl id_alu_controller(
+        .clock(core_clock),
+        .reset(core_reset),
+        .FuncCode({id_instruction[30],id_funct3}),
+        .Opcode(id_opcode),
+        .ALUCtl(ex_alu_control)
     );
 
     wire id_is_jump = id_is_jal | (id_is_branch & id_should_branch);
@@ -104,9 +113,9 @@ module cpu_core(
     wire id_should_branch = id_instruction[31];
     wire ex_should_branch;
     
-    d_flip_flop #(WIDTH=1) id_ex_branch_reg (
+    d_flip_flop #(.WIDTH(1)) id_ex_branch_reg (
         .clock(core_clock),
-        .reset(1'b0),
+        .reset(core_reset),
         .in(id_should_branch),
         .out(ex_should_branch)
     );
@@ -116,7 +125,7 @@ module cpu_core(
     d_flip_flop id_ex_pc_reg(
         .clock(core_clock),
         .reset(core_reset),
-        .in(id_pc),
+        .in((id_mux_next_pc) ? id_next_pc : id_pc),
         .out(ex_pc)
     );
 
@@ -126,7 +135,7 @@ module cpu_core(
     wire            ex_branch_enable;
 
     alu alu(
-        .ALUCtl(),
+        .ALUCtl(ex_alu_control),
         .A(ex_alu_A),
         .B(ex_alu_B),
         .alu_result(ex_alu_result),

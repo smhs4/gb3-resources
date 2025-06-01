@@ -75,5 +75,8 @@ module instruction_memory(clock, addr, out);
 		$readmemh("/gb3-resources/build/programs/program.hex",instruction_memory);
 	end
 
-	always @(posedge clock) out <= instruction_memory[addr >> 2];
+	always @(posedge clock) begin
+		out <= instruction_memory[addr[13:2]];
+	end
+
 endmodule

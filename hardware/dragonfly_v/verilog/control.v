@@ -48,7 +48,7 @@ module control(
 		data_mem_read,
 		Branch,
 		ALUSrc,
-		// Jump,
+		Jump,
 		Jalr,
 		// Lui,
 		// Auipc,
@@ -66,7 +66,7 @@ module control(
 	output reg data_mem_read;
 	output reg Branch;
 	output reg ALUSrc;
-	// output reg Jump;
+	output     Jump;
 	output reg Jalr;
 
 	output reg ex_is_pc;
@@ -78,14 +78,14 @@ module control(
 	output id_branch;
 	assign Jal = opcode[5] & opcode[3];
 	assign id_branch = (opcode[6]) & (~opcode[4]) & (~opcode[2]);
-
+	assign Jump = (opcode[6]) & (opcode[5]) & (~opcode[4]) & (opcode[2]);	//110x1	matching 11001 (JALR) 11011 (JAL)
 	always @(posedge clock) begin
 	RegWrite <= ((~opcode[5]) | ((~opcode[6]) & opcode[4]) | opcode[2]) & (~flush); //confirmed
 	data_mem_write <= ((~opcode[6]) & (opcode[5]) & (~opcode[4])) & (~flush);	//confirmed 010xx matching 01000(STORE) 01001(FP-SW) 01011(ATOMIC) 01010(unknown)
 	data_mem_read <= (~opcode[5]) & (~opcode[4]) & (~opcode[3]);	//confirmed x000x matching 00000(LOAD) 00001(FP-LW) 10000 10001(unknown)
 	Branch <= ((opcode[6]) & (~opcode[4]) & (~opcode[2])) & (~flush);//confirmed1x0x0 matching 10000 (unknown) 10010 (unknown) 11000 (BRANCH) 11010 (unknown)
 	ALUSrc <= (~opcode[5]) | opcode[2];//confirmed
-	// Jump <= (opcode[6]) & (opcode[5]) & (~opcode[4]) & (opcode[2]);	//110x1	matching 11001 (JALR) 11011 (JAL)
+
 
 	Jalr <= ((opcode[6]) & (opcode[5]) & (~opcode[4]) & (~opcode[3]) & (opcode[2])) & (~flush);		//11001 JALR
 	// Lui <= (~opcode[6]) & (opcode[5]) & (opcode[4]) & (~opcode[3]) & (opcode[2]);		//01101 LUI
