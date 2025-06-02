@@ -91,8 +91,8 @@ module top();
 	end
 
 	wire forcehalt;
-	assign forcehalt = cpu_clk_counter > 32'h2dc6c00;
-	// assign forcehalt = (cpu_clk_counter > 32'h80) | (clk_counter > 32'h100);
+	// assign forcehalt = cpu_clk_counter > 32'h2dc6c00;
+	assign forcehalt = (cpu_clk_counter > 32'h80) | (clk_counter > 32'h100);
 	wire dump_start;
 	// assign dump_start = cpu_clk_counter > 32'h2dc6b00;
 	assign dump_start = clk_counter > 1;

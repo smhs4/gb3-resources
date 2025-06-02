@@ -31,9 +31,10 @@ module data_memory(
 		 *	read from "data.hex" and store the data in data memory
 		 */
 		$readmemh("/gb3-resources/build/programs/data.hex",data_memory);
+        led_reg = 0;
 	end
     reg write_enable_reg;
-	always @(posedge clock) begin
+	always @(negedge clock) begin
 		if(write_enable_reg == 1'b1 && addr_reg == 32'h2000) begin
 			led_reg <= write_data_reg;
 		end
@@ -41,8 +42,9 @@ module data_memory(
 
 	always @(negedge clock) begin
 		data_out <= data_memory[address[11:2]];
-        addr_reg <= {22'b0,address[11:2]};
+        addr_reg <= address;
         write_data_reg <= data_in;
+        write_enable_reg <= write_enable;
         if (write_enable) begin
             data_memory[address[11:2]] <= data_in;
         end

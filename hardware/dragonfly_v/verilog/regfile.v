@@ -62,17 +62,17 @@ module regfile(clk, write, rd_addr, rd_data, rs1_addr, rs1_data, rs2_addr, rs2_d
 	/*
 	 *	buffer to store address at each positive clock edge
 	 */
-	reg [4:0]	rs1_addr_buf;
-	reg [4:0]	rs2_addr_buf;
+	// reg [4:0]	rs1_addr_buf;
+	// reg [4:0]	rs2_addr_buf;
 
 	/*
 	 *	registers for forwarding
 	 */
 	reg [31:0]	regDatA;
 	reg [31:0]	regDatB;
-	reg [31:0]	rd_addr_buf;
+	// reg [31:0]	rd_addr_buf;
 	reg [31:0]	rd_data_buf;
-	reg		write_buf;
+	// reg		write_buf;
 
 	/*
 	 *	The `initial` statement below uses Yosys's support for nonzero

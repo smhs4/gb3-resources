@@ -42,35 +42,36 @@
 
 
 
-module imm_gen(clock, inst, id_jump_offset, ex_imm);
+module imm_gen(clock, reset, inst, id_jump_offset, ex_imm);
 	input 				clock;
+	input				reset;
 	input [31:0]		inst;
 	output [31:0]		id_jump_offset;
 	output reg [31:0]	ex_imm;
 
-	initial begin
-		ex_imm = 32'b0;
-	end
-
 	assign id_jump_offset = inst[2] ? { {12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0 } : { {20{inst[31]}}, inst[7], inst[30:25], inst[11:8], 1'b0 };
 
 	always @(posedge clock) begin
-		case ({inst[6:5], inst[3:2]})
-			4'b0000: //I-type
-				ex_imm <= { {21{inst[31]}}, inst[30:20] };
-			4'b1101: //I-type JALR
-				ex_imm <= { {21{inst[31]}}, inst[30:21], 1'b0 };
-			4'b0100: //S-type
-				ex_imm <= { {21{inst[31]}}, inst[30:25], inst[11:7] };
-			4'b0101: //U-type LUI
-				ex_imm <= { inst[31:12], 12'b0 };
-			4'b0001: //U-type AUIPC
-				ex_imm <= { inst[31:12], 12'b0 };
-			// 4'b1111: //UJ-type
-			// 	ex_imm <= 4;
-			// 4'b1100: //SB-type
-				// ex_imm <= ;
-			default : ex_imm <= { {21{inst[31]}}, inst[30:20] };
-		endcase
+		if (reset)begin
+			ex_imm <= 32'b0;
+		end else begin
+			case ({inst[6:5], inst[3:2]})
+				4'b0000: //I-type
+					ex_imm <= { {21{inst[31]}}, inst[30:20] };
+				4'b1101: //I-type JALR
+					ex_imm <= { {21{inst[31]}}, inst[30:21], 1'b0 };
+				4'b0100: //S-type
+					ex_imm <= { {21{inst[31]}}, inst[30:25], inst[11:7] };
+				4'b0101: //U-type LUI
+					ex_imm <= { inst[31:12], 12'b0 };
+				4'b0001: //U-type AUIPC
+					ex_imm <= { inst[31:12], 12'b0 };
+				// 4'b1111: //UJ-type
+				// 	ex_imm <= 4;
+				// 4'b1100: //SB-type
+					// ex_imm <= ;
+				default : ex_imm <= { {21{inst[31]}}, inst[30:20] };
+			endcase
+		end
 	end
 endmodule

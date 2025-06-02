@@ -73,7 +73,14 @@ module cpu_core(
     wire [31:0] ex_imm;
 
 
-    wire [6:0] ex_alu_control;
+    wire [1:0]	ex_alu_arithmetic_select;
+	wire [1:0]	ex_alu_shift_select;
+	wire [1:0]	ex_alu_logic_select;
+
+	wire 		ex_alu_passthrough_a;
+	wire 		ex_alu_is_eq_compare;
+	wire 		ex_alu_invert_branch_condition;
+	wire 		ex_alu_is_signed_compare;
 
 
     wire id_is_jump = id_is_jal | (id_is_branch & id_should_branch);
@@ -144,6 +151,7 @@ module cpu_core(
 
     imm_gen id_immediate_generator(
         .clock(core_clock),
+        .reset(core_reset),
         .inst(id_instruction),
         .id_jump_offset(id_jump_offset),
         .ex_imm(ex_imm)
@@ -152,6 +160,7 @@ module cpu_core(
 
     control id_control_unit(
         .clock(core_clock),
+        .reset(core_reset),
         .opcode(id_opcode),
         .flush(ex_flush),
         .RegWrite(ex_reg_write),
@@ -169,9 +178,16 @@ module cpu_core(
     ALUControl id_alu_controller(
         .clock(core_clock),
         .reset(core_reset),
-        .FuncCode({id_instruction[30],id_funct3}),
+        .funct3(id_funct3),
+        .is_variant(id_instruction[30]),
         .Opcode(id_opcode),
-        .ALUCtl(ex_alu_control)
+        .ex_alu_arithmetic_select(ex_alu_arithmetic_select),
+        .ex_alu_shift_select(ex_alu_shift_select),
+        .ex_alu_logic_select(ex_alu_logic_select),
+        .ex_alu_passthrough_a(ex_alu_passthrough_a),
+        .ex_alu_is_eq_compare(ex_alu_is_eq_compare),
+        .ex_alu_invert_branch_condition(ex_alu_invert_branch_condition),
+        .ex_alu_is_signed_compare(ex_alu_is_signed_compare)
     );
 
 
@@ -191,7 +207,13 @@ module cpu_core(
     );
 
     alu alu(
-        .alu_control(ex_alu_control),
+    	.arithmetic_select(ex_alu_arithmetic_select),
+        .shift_select(ex_alu_shift_select), 
+        .logic_select(ex_alu_logic_select),
+        .passthrough_a(ex_alu_passthrough_a),
+        .is_eq_compare(ex_alu_is_eq_compare),
+        .invert_branch_condition(ex_alu_invert_branch_condition),
+        .is_signed_compare(ex_alu_is_signed_compare),
         .A(ex_alu_A),
         .B(ex_alu_B),
         .alu_result(ex_alu_result),

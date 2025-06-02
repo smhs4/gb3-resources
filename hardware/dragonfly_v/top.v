@@ -12,7 +12,7 @@ module top(
     output          uart_tx;        //uart transmit out from fpga to bluetooth/FT2232
 
     wire source_clock;
-    reg core_clock;
+    wire core_clock;
     wire uncore_clock;
 
     wire [31:0] data_core_to_mem;
@@ -32,7 +32,7 @@ module top(
 	);
 
     assign uncore_clock = source_clock;
-
+    assign core_clock = source_clock;
     /*
      * The craziest clock system you will ever see
 
@@ -40,9 +40,9 @@ module top(
      * uncore_clock:    _/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾...
      */
 
-    always @(posedge uncore_clock) begin
-        core_clock = ~core_clock;
-    end
+    // always @(posedge uncore_clock) begin
+    //     core_clock = ~core_clock;
+    // end
 
     cpu_core cpu(
         .core_clock(core_clock),
@@ -58,6 +58,7 @@ module top(
 
     instruction_memory instruction_memory(
         .clock(core_clock),
+        .reset(reset),
         .addr(instruction_address),
         .out(instruction_mem_to_core)
     );

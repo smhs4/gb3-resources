@@ -37,7 +37,8 @@
 
 
 `include "../include/rv32i-defines.v"
-`include "../include/sail-core-defines.v"
+// `include "../include/sail-core-defines.v"
+`include "../include/dragonfly_core_defines.v"
 
 
 
@@ -54,103 +55,66 @@
  *	field is only unique across the instructions that are actually
  *	fed to the ALU.
  */
-module alu(alu_control, A, B, alu_result, branch_enable);
-	input [6:0]		alu_control;
+module alu(
+	arithmetic_select,
+	shift_select,
+	logic_select,
+	passthrough_a,
+	is_eq_compare,
+	invert_branch_condition,
+	is_signed_compare,
+	A, 
+	B, 
+	alu_result, 
+	branch_enable
+);
+
+
+	input [1:0]	arithmetic_select;
+	input [1:0]	shift_select;
+	input [1:0]	logic_select;
+	input 		passthrough_a;
+	input 		is_eq_compare;
+	input 		invert_branch_condition;
+	input 		is_signed_compare;
+
 	input [31:0]		A;
 	input [31:0]		B;
-	output wire [31:0]	alu_result;
-	output reg		branch_enable;
+	output reg [31:0]	alu_result;
+	output wire		branch_enable;
+
+	wire [31:0] compare_A = {(A[31] ^ is_signed_compare),A[30:0]};
+	wire [31:0] compare_B = {(B[31] ^ is_signed_compare),B[30:0]};
 
 	reg [31:0]	not_adder;
 
-	/*
-	 *	This uses Yosys's support for nonzero initial values:
-	 *
-	 *		https://github.com/YosysHQ/yosys/commit/0793f1b196df536975a044a4ce53025c81d00c7f
-	 *
-	 *	Rather than using this simulation construct (`initial`),
-	 *	the design should instead use a reset signal going to
-	 *	modules in the design.
-	 */
-	initial begin
-		// alu_result = 32'b0;
-		// branch_enable = 1'b0;
-		// not_adder = 32'b0;
-	end
+	reg [31:0] logic_result;
+	reg [31:0] shift_logic_result;
 
-	always @(alu_control, A, B) begin
-		case (alu_control[3:0])
-			/*
-			 *	LUI
-			 */
-			`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_LUI:	not_adder = B;
-
-			/*
-			 *	AND (the fields also match ANDI)
-			 */
-			`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_AND:	not_adder = A & B;
-
-			/*
-			 *	OR (the fields also match ORI)
-			 */
-			`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_OR:	not_adder = A | B;
-
-			/*
-			 *	SUBTRACT (the fields also matches all branches)
-			 */
-			`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_SUB:	not_adder = A - B;
-
-			/*
-			 *	SLT (the fields also matches all the other SLT variants)
-			 */
-			`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_SLT:	not_adder = $signed(A) < $signed(B) ? 32'b1 : 32'b0;
-
-			/*
-			 *	SRL (the fields also matches the other SRL variants)
-			 */
-			`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_SRL:	not_adder = A >> B[4:0];
-
-			/*
-			 *	SRA (the fields also matches the other SRA variants)
-			 */
-			`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_SRA:	not_adder = $signed(A) >>> B[4:0];
-
-			/*
-			 *	SLL (the fields also match the other SLL variants)
-			 */
-			`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_SLL:	not_adder = A << B[4:0];
-
-			/*
-			 *	XOR (the fields also match other XOR variants)
-			 */
-			`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_XOR:	not_adder = A ^ B;
-			/*
-			 *	JAL and JALR
-			 */
-			`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_ILLEGAL:	not_adder = A;
-
-			/*
-			 *	Should never happen.
-			 */
-			default:					not_adder = 0;
+	always @(*) begin			//conbinational always
+		case (logic_select)
+			`ALU_SELECT_XOR:	logic_result = A ^ B;
+			`ALU_SELECT_AND:	logic_result = A & B;
+			`ALU_SELECT_OR:		logic_result = A | B;
+			`ALU_SELECT_PASSTHROUGH: logic_result = (passthrough_a) ? A : B;
+			default:	logic_result = 32'bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;	//should never happen
 		endcase
-
-	end
-			/*
-			 *	ADD (the fields also match AUIPC, all loads, all stores, and ADDI)
-			 */
-	assign alu_result = (alu_control[3:0] ==`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_ADD) ? A + B : not_adder;
-
-	always @(alu_control, A, B) begin
-		case (alu_control[6:4])
-			`kSAIL_MICROARCHITECTURE_ALUCTL_6to4_BEQ:	branch_enable = (A == B);
-			`kSAIL_MICROARCHITECTURE_ALUCTL_6to4_BNE:	branch_enable = !(A == B);
-			`kSAIL_MICROARCHITECTURE_ALUCTL_6to4_BLT:	branch_enable = ($signed(A) < $signed(B));
-			`kSAIL_MICROARCHITECTURE_ALUCTL_6to4_BGE:	branch_enable = ($signed(A) >= $signed(B));
-			`kSAIL_MICROARCHITECTURE_ALUCTL_6to4_BLTU:	branch_enable = ($unsigned(A) < $unsigned(B));
-			`kSAIL_MICROARCHITECTURE_ALUCTL_6to4_BGEU:	branch_enable = ($unsigned(A) >= $unsigned(B));
-
-			default:					branch_enable = 1'b0;
+		case (shift_select)
+			`ALU_SELECT_SLL:	shift_logic_result = A << B[4:0];
+			`ALU_SELECT_SRL:	shift_logic_result = A >> B[4:0];
+			`ALU_SELECT_SRA:	shift_logic_result = $signed(A) >>> B[4:0];
+			`ALU_SELECT_LOGIC:	shift_logic_result = logic_result;
+			default:	shift_logic_result = 32'bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;	//should never happen
+		endcase
+		case (arithmetic_select)
+			`ALU_SELECT_ADD: alu_result = A + B;
+			`ALU_SELECT_SUB: alu_result = A - B;
+			`ALU_SELECT_SLT_U: alu_result = (compare_A < compare_B) ? 32'b1 : 32'b0;
+			`ALU_SELECT_LOGIC_SHIFT: alu_result = shift_logic_result;
+			default:	alu_result = 32'bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;	//should never happen
 		endcase
 	end
+
+	assign branch_enable = ((is_eq_compare) ? (A==B) : (compare_A < compare_B)) ^ (invert_branch_condition);
+
 endmodule

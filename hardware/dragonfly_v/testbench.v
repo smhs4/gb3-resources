@@ -98,6 +98,7 @@ module testbench();
 
     instruction_memory instruction_memory(
         .clock(core_clock),
+        .reset(reset),
         .addr(instruction_address),
         .out(instruction_mem_to_core)
     );

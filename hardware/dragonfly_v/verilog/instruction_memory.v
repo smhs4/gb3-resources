@@ -42,8 +42,9 @@
 
 `define kINST_MEMORY_SIZE 9
 
-module instruction_memory(clock, addr, out);
+module instruction_memory(clock, reset, addr, out);
 	input 				clock;
+	input				reset;
 	input [31:0]		addr;
 	output reg [31:0]		out;
 
@@ -76,7 +77,11 @@ module instruction_memory(clock, addr, out);
 	end
 
 	always @(posedge clock) begin
-		out <= instruction_memory[addr[`kINST_MEMORY_SIZE+1:2]];
+		// if (reset) begin
+		// 	out <= 32'b0;
+		// end else begin
+			out <= instruction_memory[addr[`kINST_MEMORY_SIZE+1:2]];
+		// end
 	end
 
 endmodule

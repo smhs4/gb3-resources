@@ -37,7 +37,8 @@
 
 
 `include "../include/rv32i-defines.v"
-`include "../include/sail-core-defines.v"
+// `include "../include/sail-core-defines.v"
+`include "../include/dragonfly_core_defines.v"
 
 
 
@@ -49,195 +50,286 @@
 
 
 
-module ALUControl(clock, reset, FuncCode, ALUCtl, Opcode);
+module ALUControl(
+	clock, 
+	reset, 
+	Opcode,
+	funct3, 
+	is_variant, 
+	ex_alu_arithmetic_select,
+	ex_alu_shift_select, 
+	ex_alu_logic_select,
+	ex_alu_passthrough_a,
+	ex_alu_is_eq_compare,
+	ex_alu_invert_branch_condition,
+	ex_alu_is_signed_compare
+);
 	input 			clock;
 	input			reset;
-	input [3:0]		FuncCode;
-	input [6:0]		Opcode;
-	output reg [6:0]	ALUCtl;
+	input [2:0]		funct3;
+	input			is_variant;
+	
+	input 	   [6:0]	Opcode;
+	output reg [1:0]	ex_alu_arithmetic_select;
+	output reg [1:0]	ex_alu_shift_select;
+	output reg [1:0]	ex_alu_logic_select;
+	output reg 			ex_alu_passthrough_a;
 
-	/*
-	 *	The `initial` statement below uses Yosys's support for nonzero
-	 *	initial values:
-	 *
-	 *		https://github.com/YosysHQ/yosys/commit/0793f1b196df536975a044a4ce53025c81d00c7f
-	 *
-	 *	Rather than using this simulation construct (`initial`),
-	 *	the design should instead use a reset signal going to
-	 *	modules in the design and to thereby set the values.
-	 */
-	initial begin
-		ALUCtl = 7'b0;
-	end
-
-
-
-	/*
-	 *	TODO:
-	 *
-	 *	(1) Please replace the values being assigned to ALUCtl with the corresponding `defines in sail-core-defines.v
-	 *	(2) Please replace the FuncCode constants with the corresponding `defines in sail-core-defines.v
-	 */
-
-
+	output reg 			ex_alu_is_eq_compare;
+	output reg 			ex_alu_invert_branch_condition;
+	output reg 			ex_alu_is_signed_compare;
 
 	always @(posedge clock) begin
-		if (reset) begin
-			ALUCtl <= 7'b0;
+		if (reset) begin //complete
+			ex_alu_arithmetic_select 		<= 2'b00;
+			ex_alu_shift_select 			<= 2'b00;
+			ex_alu_logic_select 			<= 2'b00;
+			ex_alu_passthrough_a 			<= 1'b0;
+			ex_alu_is_eq_compare 			<= 1'b1;	// set to branch if equals, predictor latch is cleared when reset so this forces a mispredict
+														// As a result, the road not taken is used, which is forced to zero during reset
+			ex_alu_invert_branch_condition 	<= 1'b0;
+			ex_alu_is_signed_compare 		<= 1'b0;
 		end else begin
 			case (Opcode)
 				/*
 				*	LUI, U-Type
 				*/
-				`kRV32I_INSTRUCTION_OPCODE_LUI:
-					ALUCtl = 7'b0001100;
+				`kRV32I_INSTRUCTION_OPCODE_LUI: begin //complete
+					ex_alu_arithmetic_select <= `ALU_SELECT_LOGIC_SHIFT;		// select shift, logic or pass-through
+					ex_alu_shift_select <= `ALU_SELECT_LOGIC;					// select logic or pass-through
+					ex_alu_logic_select <= `ALU_SELECT_PASSTHROUGH;				// select pass-through
+					ex_alu_passthrough_a <= 1'b0;								// pass-through b: the immediate value
+
+					ex_alu_is_eq_compare 			<= 1'bx;					// LUI is not compare instruction
+					ex_alu_invert_branch_condition 	<= 1'bx;
+					ex_alu_is_signed_compare 		<= 1'bx;
+				end
 
 				/*
 				*	AUIPC, U-Type
 				*/
-				`kRV32I_INSTRUCTION_OPCODE_AUIPC:
-					ALUCtl = 7'b0000010;
+				`kRV32I_INSTRUCTION_OPCODE_AUIPC: begin //complete
+					ex_alu_arithmetic_select 		<= `ALU_SELECT_ADD;		// addition
+					ex_alu_shift_select 			<= 2'bxx;				// don't care since the final stage is addition
+					ex_alu_logic_select 			<= 2'bxx;
+					ex_alu_passthrough_a 			<= 2'bxx;
+
+					ex_alu_is_eq_compare 			<= 1'bx;				// AUIPC is not a compare instruction
+					ex_alu_invert_branch_condition 	<= 1'bx;
+					ex_alu_is_signed_compare 		<= 1'bx;
+				end
 
 				/*
 				*	JAL, UJ-Type
 				*/
-				`kRV32I_INSTRUCTION_OPCODE_JAL:
-					ALUCtl = `kSAIL_MICROARCHITECTURE_ALUCTL_6to0_ILLEGAL;
+				`kRV32I_INSTRUCTION_OPCODE_JAL: begin //complete
+					ex_alu_arithmetic_select 		<= `ALU_SELECT_LOGIC_SHIFT;		// select shift, logic or pass-through
+					ex_alu_shift_select 			<= `ALU_SELECT_LOGIC;			// select logic or pass-through
+					ex_alu_logic_select 			<= `ALU_SELECT_PASSTHROUGH;		// select pass-through
+					ex_alu_passthrough_a 			<= 1'b1;						// pass-through a: the next pc
+					
+					ex_alu_is_eq_compare 			<= 1'bx;				// AUIPC is not a compare instruction
+					ex_alu_invert_branch_condition 	<= 1'bx;
+					ex_alu_is_signed_compare 		<= 1'bx;
+				end
 
 				/*
 				*	JALR, I-Type
 				*/
-				`kRV32I_INSTRUCTION_OPCODE_JALR:
-					ALUCtl = `kSAIL_MICROARCHITECTURE_ALUCTL_6to0_ILLEGAL;
+				`kRV32I_INSTRUCTION_OPCODE_JALR: begin //complete
+					ex_alu_arithmetic_select 		<= `ALU_SELECT_LOGIC_SHIFT;		// select shift, logic or pass-through
+					ex_alu_shift_select 			<= `ALU_SELECT_LOGIC;			// select logic or pass-through
+					ex_alu_logic_select 			<= `ALU_SELECT_PASSTHROUGH;		// select pass-through
+					ex_alu_passthrough_a 			<= 1'b1;						// pass-through a: the next pc
+					
+					ex_alu_is_eq_compare 			<= 1'bx;				// AUIPC is not a compare instruction
+					ex_alu_invert_branch_condition 	<= 1'bx;
+					ex_alu_is_signed_compare 		<= 1'bx;
+				end
 
 				/*
 				*	Branch, SB-Type
 				*/
-				`kRV32I_INSTRUCTION_OPCODE_BRANCH:
-					case (FuncCode[2:0])
-						3'b000:
-							ALUCtl = 7'b0010110; //BEQ conditions
-						3'b001:
-							ALUCtl = 7'b0100110; //BNE conditions
-						3'b100:
-							ALUCtl = 7'b0110110; //BLT conditions
-						3'b101:
-							ALUCtl = 7'b1000110; //BGE conditions
-						3'b110:
-							ALUCtl = 7'b1010110; //BLTU conditions
-						3'b111:
-							ALUCtl = 7'b1100110; //BGEU conditions
-						default:
-							ALUCtl = `kSAIL_MICROARCHITECTURE_ALUCTL_6to0_ILLEGAL;
-					endcase
+				`kRV32I_INSTRUCTION_OPCODE_BRANCH: begin //complete
+					ex_alu_arithmetic_select 		<= 2'bxx;
+					ex_alu_shift_select 			<= 2'bxx;
+					ex_alu_logic_select 			<= 2'bxx;
+					ex_alu_passthrough_a 			<= 1'bx;
+
+					ex_alu_is_eq_compare 			<= ~funct3[2];
+					ex_alu_invert_branch_condition 	<=  funct3[0];
+					ex_alu_is_signed_compare 		<= ~funct3[1];
+				end
 
 				/*
 				*	Loads, I-Type
 				*/
-				`kRV32I_INSTRUCTION_OPCODE_LOAD:
-					case (FuncCode[2:0])
-						3'b000:
-							ALUCtl = 7'b0000010; //LB
-						3'b001:
-							ALUCtl = 7'b0000010; //LH
-						3'b010:
-							ALUCtl = 7'b0000010; //LW
-						3'b100:
-							ALUCtl = 7'b0000010; //LBU
-						3'b101:
-							ALUCtl = 7'b0000010; //LHU
-						default:
-							ALUCtl = `kSAIL_MICROARCHITECTURE_ALUCTL_6to0_ILLEGAL;
-					endcase
+				`kRV32I_INSTRUCTION_OPCODE_LOAD: begin //complete	//LOAD does not use ALU result, thus the output can be any value
+					ex_alu_arithmetic_select 		<= 2'bxx;
+					ex_alu_shift_select 			<= 2'bxx;
+					ex_alu_logic_select 			<= 2'bxx;
+					ex_alu_passthrough_a 			<= 1'bx;
+					
+					ex_alu_is_eq_compare 			<= 1'bx;
+					ex_alu_invert_branch_condition 	<= 1'bx;
+					ex_alu_is_signed_compare 		<= 1'bx;
+				end
 
 				/*
 				*	Stores, S-Type
 				*/
-				`kRV32I_INSTRUCTION_OPCODE_STORE:
-					case (FuncCode[2:0])
-						3'b000:
-							ALUCtl = 7'b0000010; //SB
-						3'b001:
-							ALUCtl = 7'b0000010; //SH
-						3'b010:
-							ALUCtl = 7'b0000010; //SW
-						default:
-							ALUCtl = `kSAIL_MICROARCHITECTURE_ALUCTL_6to0_ILLEGAL;
-					endcase
+				`kRV32I_INSTRUCTION_OPCODE_STORE: begin	//complete	//STORE does not use ALU result, thus the output can be any value
+					ex_alu_arithmetic_select 		<= 2'bxx;
+					ex_alu_shift_select 			<= 2'bxx;
+					ex_alu_logic_select 			<= 2'bxx;
+					ex_alu_passthrough_a 			<= 1'bx;
+					
+					ex_alu_is_eq_compare 			<= 1'bx;
+					ex_alu_invert_branch_condition 	<= 1'bx;
+					ex_alu_is_signed_compare 		<= 1'bx;
+				end
 
 				/*
 				*	Immediate operations, I-Type
 				*/
-				`kRV32I_INSTRUCTION_OPCODE_IMMOP:
-					case (FuncCode[2:0])
-						3'b000:
-							ALUCtl = 7'b0000010; //ADDI
-						3'b010:
-							ALUCtl = 7'b0000111; //SLTI
-						3'b011:
-							ALUCtl = 7'b0000111; //SLTIU
-						3'b100:
-							ALUCtl = 7'b0001000; //XORI
-						3'b110:
-							ALUCtl = 7'b0000001; //ORI
-						3'b111:
-							ALUCtl = 7'b0000000; //ANDI
-						3'b001:
-							ALUCtl = 7'b0000101; //SLLI
-						3'b101:
-							case (FuncCode[3])
-								1'b0:
-									ALUCtl = 7'b0000011; //SRLI
-								1'b1:
-									ALUCtl = 7'b0000100; //SRAI
-								default:
-									ALUCtl = `kSAIL_MICROARCHITECTURE_ALUCTL_6to0_ILLEGAL;
-							endcase
-						default:
-							ALUCtl = `kSAIL_MICROARCHITECTURE_ALUCTL_6to0_ILLEGAL;
+				`kRV32I_INSTRUCTION_OPCODE_IMMOP: begin //complete
+					ex_alu_is_eq_compare 			<= 1'bx;	//not branch instruction
+					ex_alu_invert_branch_condition 	<= 1'bx;
+					ex_alu_is_signed_compare 		<= ~funct3[0];
+					case (funct3[2:0])
+						3'b000: begin //complete	ADDI
+							ex_alu_arithmetic_select 		<= `ALU_SELECT_ADD;		// addition
+							ex_alu_shift_select 			<= 2'bxx;				// don't care since the final stage is addition
+							ex_alu_logic_select 			<= 2'bxx;
+							ex_alu_passthrough_a 			<= 2'bxx;
+						end
+						3'b001: begin //complete	SLLI
+							ex_alu_arithmetic_select 		<= `ALU_SELECT_LOGIC_SHIFT;	// select shift, logic or pass-through
+							ex_alu_shift_select 			<= `ALU_SELECT_SLL;			// select sll
+							ex_alu_logic_select 			<= 2'bxx;
+							ex_alu_passthrough_a 			<= 1'bx;
+						end
+						3'b010: begin //complete	SLT
+							ex_alu_arithmetic_select 		<= `ALU_SELECT_SLT_U;	// slt of sltu
+							ex_alu_shift_select 			<= 2'bxx;				// don't care since the final stage is slt
+							ex_alu_logic_select 			<= 2'bxx;
+							ex_alu_passthrough_a 			<= 2'bxx;
+						end
+						3'b011: begin //complete	SLTU
+							ex_alu_arithmetic_select 		<= `ALU_SELECT_SLT_U;	// slt of sltu
+							ex_alu_shift_select 			<= 2'bxx;				// don't care since the final stage is sltu
+							ex_alu_logic_select 			<= 2'bxx;
+							ex_alu_passthrough_a 			<= 2'bxx;
+						end
+						3'b100: begin //complete	XORI
+							ex_alu_arithmetic_select 		<= `ALU_SELECT_LOGIC_SHIFT;		// select shift, logic or pass-through
+							ex_alu_shift_select 			<= `ALU_SELECT_LOGIC;			// select logic or pass-through
+							ex_alu_logic_select 			<= `ALU_SELECT_XOR;				// select XOR
+							ex_alu_passthrough_a 			<= 1'bx;
+						end
+						3'b101: begin //complete	SHIFT RIGHT imm
+							ex_alu_arithmetic_select 		<= `ALU_SELECT_LOGIC_SHIFT;	// select shift, logic or pass-through
+							ex_alu_shift_select 			<= (is_variant) ? `ALU_SELECT_SRA : `ALU_SELECT_SRL;// select shift right
+							ex_alu_logic_select 			<= 2'bxx;
+							ex_alu_passthrough_a 			<= 1'bx;
+						end
+						3'b110: begin //complete ORI
+							ex_alu_arithmetic_select 		<= `ALU_SELECT_LOGIC_SHIFT;		// select shift, logic or pass-through
+							ex_alu_shift_select 			<= `ALU_SELECT_LOGIC;			// select logic or pass-through
+							ex_alu_logic_select 			<= `ALU_SELECT_OR;				// select OR
+							ex_alu_passthrough_a 			<= 1'bx;
+						end
+						3'b111: begin //complete ANDI
+							ex_alu_arithmetic_select 		<= `ALU_SELECT_LOGIC_SHIFT;		// select shift, logic or pass-through
+							ex_alu_shift_select 			<= `ALU_SELECT_LOGIC;			// select logic or pass-through
+							ex_alu_logic_select 			<= `ALU_SELECT_AND;				// select AND
+							ex_alu_passthrough_a 			<= 1'bx;
+						end
+						default: begin	// should never happen
+							ex_alu_arithmetic_select 		<= 2'bxx;
+							ex_alu_shift_select 			<= 2'bxx;
+							ex_alu_logic_select 			<= 2'bxx;
+							ex_alu_passthrough_a 			<= 1'bx;
+						end
 					endcase
+				end
 
 				/*
 				*	ADD SUB & logic shifts, R-Type
 				*/
-				`kRV32I_INSTRUCTION_OPCODE_ALUOP:
-					case (FuncCode[2:0])
-						3'b000:
-							case(FuncCode[3])
-								1'b0:
-									ALUCtl = 7'b0000010; //ADD
-								1'b1:
-									ALUCtl = 7'b0000110; //SUB
-								default:
-									ALUCtl = `kSAIL_MICROARCHITECTURE_ALUCTL_6to0_ILLEGAL;
-							endcase
-						3'b001:
-							ALUCtl = 7'b0000101; //SLL
-						3'b010:
-							ALUCtl = 7'b0000111; //SLT
-						3'b011:
-							ALUCtl = 7'b0000111; //SLTU
-						3'b100:
-							ALUCtl = 7'b0001000; //XOR
-						3'b101:
-							case(FuncCode[3])
-								1'b0:
-									ALUCtl = 7'b0000011; //SRL
-								1'b1:
-									ALUCtl = 7'b0000100; //SRA untested
-								default:
-									ALUCtl = `kSAIL_MICROARCHITECTURE_ALUCTL_6to0_ILLEGAL;
-							endcase
-						3'b110:
-							ALUCtl = 7'b0000001; //OR
-						3'b111:
-							ALUCtl = 7'b0000000; //AND
-						default:
-							ALUCtl = `kSAIL_MICROARCHITECTURE_ALUCTL_6to0_ILLEGAL;
+				`kRV32I_INSTRUCTION_OPCODE_ALUOP: begin
+					ex_alu_is_eq_compare 			<= 1'bx;	//not branch instruction
+					ex_alu_invert_branch_condition 	<= 1'bx;
+					ex_alu_is_signed_compare 		<= (~funct3[0]) & (~is_variant);
+					case (funct3[2:0])
+						3'b000: begin //complete	ADD SUB
+							ex_alu_arithmetic_select 		<= (is_variant) ? `ALU_SELECT_SUB : `ALU_SELECT_ADD;		// addition
+							ex_alu_shift_select 			<= 2'bxx;				// don't care since the final stage is addition
+							ex_alu_logic_select 			<= 2'bxx;
+							ex_alu_passthrough_a 			<= 2'bxx;
+						end
+						3'b001: begin //complete	SLLI
+							ex_alu_arithmetic_select 		<= `ALU_SELECT_LOGIC_SHIFT;	// select shift, logic or pass-through
+							ex_alu_shift_select 			<= `ALU_SELECT_SLL;			// select sll
+							ex_alu_logic_select 			<= 2'bxx;
+							ex_alu_passthrough_a 			<= 1'bx;
+						end
+						3'b010: begin //complete	SLT
+							ex_alu_arithmetic_select 		<= `ALU_SELECT_SLT_U;	// slt of sltu
+							ex_alu_shift_select 			<= 2'bxx;				// don't care since the final stage is slt
+							ex_alu_logic_select 			<= 2'bxx;
+							ex_alu_passthrough_a 			<= 2'bxx;
+						end
+						3'b011: begin //complete	SLTU
+							ex_alu_arithmetic_select 		<= `ALU_SELECT_SLT_U;	// slt of sltu
+							ex_alu_shift_select 			<= 2'bxx;				// don't care since the final stage is sltu
+							ex_alu_logic_select 			<= 2'bxx;
+							ex_alu_passthrough_a 			<= 2'bxx;
+						end
+						3'b100: begin //complete	XOR
+							ex_alu_arithmetic_select 		<= `ALU_SELECT_LOGIC_SHIFT;		// select shift, logic or pass-through
+							ex_alu_shift_select 			<= `ALU_SELECT_LOGIC;			// select logic or pass-through
+							ex_alu_logic_select 			<= `ALU_SELECT_XOR;				// select XOR
+							ex_alu_passthrough_a 			<= 1'bx;
+						end
+						3'b101: begin //complete	SHIFT RIGHT
+							ex_alu_arithmetic_select 		<= `ALU_SELECT_LOGIC_SHIFT;	// select shift, logic or pass-through
+							ex_alu_shift_select 			<= (is_variant) ? `ALU_SELECT_SRA : `ALU_SELECT_SRL;// select shift right
+							ex_alu_logic_select 			<= 2'bxx;
+							ex_alu_passthrough_a 			<= 1'bx;
+						end
+						3'b110: begin //complete OR
+							ex_alu_arithmetic_select 		<= `ALU_SELECT_LOGIC_SHIFT;		// select shift, logic or pass-through
+							ex_alu_shift_select 			<= `ALU_SELECT_LOGIC;			// select logic or pass-through
+							ex_alu_logic_select 			<= `ALU_SELECT_OR;				// select OR
+							ex_alu_passthrough_a 			<= 1'bx;
+						end
+						3'b111: begin //complete AND
+							ex_alu_arithmetic_select 		<= `ALU_SELECT_LOGIC_SHIFT;		// select shift, logic or pass-through
+							ex_alu_shift_select 			<= `ALU_SELECT_LOGIC;			// select logic or pass-through
+							ex_alu_logic_select 			<= `ALU_SELECT_AND;				// select AND
+							ex_alu_passthrough_a 			<= 1'bx;
+						end
+						default: begin	// should never happen
+							ex_alu_arithmetic_select 		<= 2'bxx;
+							ex_alu_shift_select 			<= 2'bxx;
+							ex_alu_logic_select 			<= 2'bxx;
+							ex_alu_passthrough_a 			<= 1'bx;
+						end
 					endcase
+				end
+					
 
-				default:
-					ALUCtl = `kSAIL_MICROARCHITECTURE_ALUCTL_6to0_ILLEGAL;
+				default: begin  //complete	// should not happen, defined to all x to allow optimization
+					ex_alu_arithmetic_select 		<= 2'bxx;
+					ex_alu_shift_select 			<= 2'bxx;
+					ex_alu_logic_select 			<= 2'bxx;
+					ex_alu_passthrough_a 			<= 1'bx;
+					
+					ex_alu_is_eq_compare 			<= 1'bx;
+					ex_alu_invert_branch_condition 	<= 1'bx;
+					ex_alu_is_signed_compare 		<= 1'bx;
+				end
 			endcase
 		end
 	end

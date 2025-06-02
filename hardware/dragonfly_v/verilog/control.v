@@ -41,6 +41,7 @@
  */
 module control(
 		clock,
+		reset,
 		opcode,
 		flush,
 		RegWrite,
@@ -59,6 +60,7 @@ module control(
 	);
 
 	input 			clock;
+	input			reset;
 	input	[6:0] 	opcode;
 	input			flush;
 
@@ -81,18 +83,28 @@ module control(
 	assign id_branch = (opcode[6]) & (~opcode[4]) & (~opcode[2]);
 	assign Jump = (opcode[6]) & (opcode[5]) & (~opcode[4]) & (opcode[2]);	//110x1	matching 11001 (JALR) 11011 (JAL)
 	always @(posedge clock) begin
-	RegWrite <= ((~opcode[5]) | ((~opcode[6]) & opcode[4]) | opcode[2]) & (~flush); //confirmed
-	data_mem_write <= ((~opcode[6]) & (opcode[5]) & (~opcode[4])) & (~flush);	//confirmed 010xx matching 01000(STORE) 01001(FP-SW) 01011(ATOMIC) 01010(unknown)
-	data_mem_read <= (~opcode[5]) & (~opcode[4]) & (~opcode[3]);	//confirmed x000x matching 00000(LOAD) 00001(FP-LW) 10000 10001(unknown)
-	Branch <= ((opcode[6]) & (~opcode[4]) & (~opcode[2])) & (~flush);//confirmed1x0x0 matching 10000 (unknown) 10010 (unknown) 11000 (BRANCH) 11010 (unknown)
-	ALUSrc <= (~opcode[5]) | opcode[2];//confirmed
+		if (reset)begin
+			RegWrite <= 0;
+			data_mem_write <= 0;
+			data_mem_read <=0;
+			Branch = 1;		// Set to branch instruction to force flush
+			ALUSrc = 1;		// Set to immediate when reset, which is zero, for comparison with...
+			Jalr = 0;		
+			ex_is_pc = 1;	// Latched PC value, which is also zero. The result is under control and can be used to force a branch mispreidct to clear PC
+		end else begin
+			RegWrite <= ((~opcode[5]) | ((~opcode[6]) & opcode[4]) | opcode[2]) & (~flush); //confirmed
+			data_mem_write <= ((~opcode[6]) & (opcode[5]) & (~opcode[4])) & (~flush);	//confirmed 010xx matching 01000(STORE) 01001(FP-SW) 01011(ATOMIC) 01010(unknown)
+			data_mem_read <= (~opcode[5]) & (~opcode[4]) & (~opcode[3]);	//confirmed x000x matching 00000(LOAD) 00001(FP-LW) 10000 10001(unknown)
+			Branch <= ((opcode[6]) & (~opcode[4]) & (~opcode[2])) & (~flush);//confirmed1x0x0 matching 10000 (unknown) 10010 (unknown) 11000 (BRANCH) 11010 (unknown)
+			ALUSrc <= (~opcode[5]) | opcode[2];//confirmed
 
 
-	Jalr <= ((opcode[6]) & (opcode[5]) & (~opcode[4]) & (~opcode[3]) & (opcode[2])) & (~flush);		//11001 JALR
-	// Lui <= (~opcode[6]) & (opcode[5]) & (opcode[4]) & (~opcode[3]) & (opcode[2]);		//01101 LUI
-	// Auipc <= (~opcode[6]) & (~opcode[5]) & (opcode[4]) & (~opcode[3]) & (opcode[2]);	//00101 AUIPC
-	// Fence <= (~opcode[5]) & opcode[3] & (opcode[2]);
-	ex_is_pc <= opcode[2] & (~(opcode[5] | opcode[4]));
+			Jalr <= ((opcode[6]) & (opcode[5]) & (~opcode[4]) & (~opcode[3]) & (opcode[2])) & (~flush);		//11001 JALR
+			// Lui <= (~opcode[6]) & (opcode[5]) & (opcode[4]) & (~opcode[3]) & (opcode[2]);		//01101 LUI
+			// Auipc <= (~opcode[6]) & (~opcode[5]) & (opcode[4]) & (~opcode[3]) & (opcode[2]);	//00101 AUIPC
+			// Fence <= (~opcode[5]) & opcode[3] & (opcode[2]);
+			ex_is_pc <= opcode[2] & (~(opcode[5] | opcode[4]));
+		end
 	end
 
 endmodule
