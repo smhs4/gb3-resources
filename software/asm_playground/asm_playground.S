@@ -14,6 +14,6 @@ LC0:
     li  s0,255
     sw s0, 0(a5) # 
     
-    ret
+    j LC0
 
     .size	main, .-main

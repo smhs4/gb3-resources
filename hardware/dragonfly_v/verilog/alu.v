@@ -50,12 +50,12 @@
 
 
 /*
- *	Not all instructions are fed to the ALU. As a result, the ALUctl
+ *	Not all instructions are fed to the ALU. As a result, the alu_control
  *	field is only unique across the instructions that are actually
  *	fed to the ALU.
  */
-module alu(ALUctl, A, B, alu_result, branch_enable);
-	input [6:0]		ALUctl;
+module alu(alu_control, A, B, alu_result, branch_enable);
+	input [6:0]		alu_control;
 	input [31:0]		A;
 	input [31:0]		B;
 	output wire [31:0]	alu_result;
@@ -74,12 +74,12 @@ module alu(ALUctl, A, B, alu_result, branch_enable);
 	 */
 	initial begin
 		// alu_result = 32'b0;
-		branch_enable = 1'b0;
-		not_adder = 32'b0;
+		// branch_enable = 1'b0;
+		// not_adder = 32'b0;
 	end
 
-	always @(ALUctl, A, B) begin
-		case (ALUctl[3:0])
+	always @(alu_control, A, B) begin
+		case (alu_control[3:0])
 			/*
 			 *	LUI
 			 */
@@ -139,10 +139,10 @@ module alu(ALUctl, A, B, alu_result, branch_enable);
 			/*
 			 *	ADD (the fields also match AUIPC, all loads, all stores, and ADDI)
 			 */
-	assign alu_result = (ALUctl[3:0] ==`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_ADD) ? A + B : not_adder;
+	assign alu_result = (alu_control[3:0] ==`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_ADD) ? A + B : not_adder;
 
-	always @(ALUctl, A, B) begin
-		case (ALUctl[6:4])
+	always @(alu_control, A, B) begin
+		case (alu_control[6:4])
 			`kSAIL_MICROARCHITECTURE_ALUCTL_6to4_BEQ:	branch_enable = (A == B);
 			`kSAIL_MICROARCHITECTURE_ALUCTL_6to4_BNE:	branch_enable = !(A == B);
 			`kSAIL_MICROARCHITECTURE_ALUCTL_6to4_BLT:	branch_enable = ($signed(A) < $signed(B));

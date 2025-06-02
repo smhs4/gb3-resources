@@ -94,22 +94,31 @@ module regfile(clk, write, rd_addr, rd_data, rs1_addr, rs1_data, rs2_addr, rs2_d
 		for (i = 0; i < 32; i = i+1) begin
 			regfile[i] = 32'b0;
 		end
+		rs1_forward_enable = 1'b0;
+		rs2_forward_enable = 1'b0;
 		// regfile[0] = 32'b0;
 	end
+
+	wire forward_enable = write & (rd_addr != 5'b0);
+	reg rs1_forward_enable;
+	reg rs2_forward_enable;
 
 	always @(posedge clk) begin
 		if (write==1'b1 && rd_addr!=5'b0) begin
 			regfile[rd_addr] <= rd_data;
 		end
-		rd_addr_buf	<= rd_addr;
-		write_buf	<= write;
+		// rd_addr_buf	<= rd_addr;
+		// write_buf	<= write;
 		rd_data_buf	<= rd_data;
-		rs1_addr_buf	<= rs1_addr;
-		rs2_addr_buf	<= rs2_addr;
+		// rs1_addr_buf	<= rs1_addr;
+		// rs2_addr_buf	<= rs2_addr;
+		rs1_forward_enable <= (rd_addr==rs1_addr) & forward_enable;
+		rs2_forward_enable <= (rd_addr==rs2_addr) & forward_enable;
+
 		regDatA		<= regfile[rs1_addr];
 		regDatB		<= regfile[rs2_addr];
 	end
 
-	assign	rs1_data = ((rd_addr_buf==rs1_addr_buf) & write_buf & rd_addr_buf!=32'b0) ? rd_data_buf : regDatA;
-	assign	rs2_data = ((rd_addr_buf==rs2_addr_buf) & write_buf & rd_addr_buf!=32'b0) ? rd_data_buf : regDatB;
+	assign	rs1_data = rs1_forward_enable ? rd_data_buf : regDatA;
+	assign	rs2_data = rs2_forward_enable ? rd_data_buf : regDatB;
 endmodule

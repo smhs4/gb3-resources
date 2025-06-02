@@ -64,4 +64,4 @@ install: all
 clean:
 	$(RM) init.i *.o $(PROGRAM) $(PROGRAM).sr $(PROGRAM).map
 	$(RM) init-sf.i *.o $(PROGRAM-SF) $(PROGRAM-SF).sr $(PROGRAM-SF).map
-	$(RM) program.hex data.hex
+	$(RM) $(GB3_ROOT)/build/programs/program.hex $(GB3_ROOT)/build/programs/data.hex $(GB3_ROOT)/build/programs/object

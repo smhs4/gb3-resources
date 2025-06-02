@@ -40,19 +40,19 @@
  *	RISC-V instruction memory
  */
 
-
+`define kINST_MEMORY_SIZE 9
 
 module instruction_memory(clock, addr, out);
 	input 				clock;
 	input [31:0]		addr;
-	output [31:0]		out;
+	output reg [31:0]		out;
 
 	/*
 	 *	Size the instruction memory.
 	 *
 	 *	(Bad practice: The constant should be a `define).
 	 */
-	reg [31:0]		instruction_memory[0:2**12-1];
+	reg [31:0]		instruction_memory[0:2**`kINST_MEMORY_SIZE-1];
 
 	/*
 	 *	According to the "iCE40 SPRAM Usage Guide" (TN1314 Version 1.0), page 5:
@@ -76,7 +76,7 @@ module instruction_memory(clock, addr, out);
 	end
 
 	always @(posedge clock) begin
-		out <= instruction_memory[addr[13:2]];
+		out <= instruction_memory[addr[`kINST_MEMORY_SIZE+1:2]];
 	end
 
 endmodule

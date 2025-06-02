@@ -12,7 +12,7 @@ module top(
     output          uart_tx;        //uart transmit out from fpga to bluetooth/FT2232
 
     wire source_clock;
-    wire core_clock;
+    reg core_clock;
     wire uncore_clock;
 
     wire [31:0] data_core_to_mem;
@@ -68,7 +68,9 @@ module top(
         .data_in(data_core_to_mem),
         .data_out(data_mem_to_core),
         .write_enable(data_write_enable),
-        .mode(data_mode)
+        .mode(data_mode),
+        .led(led),
+        .uart_tx(uart_tx)
     );
 
 

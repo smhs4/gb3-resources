@@ -60,6 +60,7 @@ module control(
 
 	input 			clock;
 	input	[6:0] 	opcode;
+	input			flush;
 
 	output reg RegWrite;
 	output reg data_mem_write;

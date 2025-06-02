@@ -3,4 +3,4 @@ set_io	led D3
 set_io  uart_rx A1
 set_io  uart_tx A2
 
-set_io  temp_in A5
+set_io  reset A5

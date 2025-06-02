@@ -52,7 +52,7 @@ module imm_gen(clock, inst, id_jump_offset, ex_imm);
 		ex_imm = 32'b0;
 	end
 
-	id_jump_offset = inst[2] ? { {12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0 } : { {20{inst[31]}}, inst[7], inst[30:25], inst[11:8], 1'b0 };
+	assign id_jump_offset = inst[2] ? { {12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0 } : { {20{inst[31]}}, inst[7], inst[30:25], inst[11:8], 1'b0 };
 
 	always @(posedge clock) begin
 		case ({inst[6:5], inst[3:2]})

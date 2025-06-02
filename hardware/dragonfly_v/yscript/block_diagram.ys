@@ -9,6 +9,4 @@ read_verilog verilog/data_memory.v
 read_verilog verilog/imm_gen.v
 read_verilog verilog/instruction_memory.v
 
-synth_ice40 -noflatten -blif build/dragonfly_v.blif
-
-write_json build/dragonfly_v.json
+show -colors 1 -format dot
