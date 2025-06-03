@@ -81,7 +81,7 @@ module top();
 	reg [31:0] clk_counter;
 
 	initial begin
-		$dumpoff;
+		// $dumpoff;
 		$dumpfile ("proc_sim.vcd");
 		$dumpvars;
 		clk <= 0;
@@ -91,11 +91,11 @@ module top();
 	end
 
 	wire forcehalt;
-	// assign forcehalt = cpu_clk_counter > 32'h2dc6c00;
-	assign forcehalt = (cpu_clk_counter > 32'h80) | (clk_counter > 32'h100);
+	assign forcehalt = cpu_clk_counter > 32'h13c5f;
+	// assign forcehalt = (cpu_clk_counter > 32'h80) | (clk_counter > 32'h100);
 	wire dump_start;
-	// assign dump_start = cpu_clk_counter > 32'h2dc6b00;
-	assign dump_start = clk_counter > 1;
+	assign dump_start = cpu_clk_counter > 32'h2dc6b00;
+	// assign dump_start = clk_counter > 1;
 
 	wire program_halt = |inst_in[31:20];
 	always @(posedge clk) begin
@@ -103,13 +103,13 @@ module top();
 	end
 	always @(posedge clk_proc) begin
 		cpu_clk_counter <= cpu_clk_counter+1;
-		if (led[0]) begin
-			counter2 <= counter2+1;
-		end
+		// if (led[0]) begin
+		// 	counter2 <= counter2+1;
+		// end
 	end
-	always @(posedge dump_start or posedge led[0]) begin
-		$dumpon;
-	end
+	// always @(posedge dump_start or posedge led[0]) begin
+	// 	$dumpon;
+	// end
 	always @(posedge forcehalt or posedge counter2[5]) begin
 		$finish;
 	end

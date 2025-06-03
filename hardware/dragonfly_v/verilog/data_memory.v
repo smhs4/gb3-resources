@@ -73,6 +73,8 @@ module data_memory(
     reg [31:0]  read_word_buf;
     reg [31:0]  read_data_buf;
 
+    wire [9:0] corrected_address = address[11:2];
+
 	always @(negedge clock) begin
         //MMIO part
         addr_reg <= address;
@@ -89,7 +91,7 @@ module data_memory(
             if(write_mask[3]) data_memory[address[`kDATA_MEMORY_SIZE+1:2]][31:24] <= write_buf[31:24];
         end
         //read part
-        read_word_buf <= data_memory[address[`kDATA_MEMORY_SIZE+1:2]];
+        read_word_buf <= data_memory[corrected_address];
 		
 	end
     // magic, madness, heaven, sin

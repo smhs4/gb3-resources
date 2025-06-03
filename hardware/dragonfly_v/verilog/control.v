@@ -103,7 +103,7 @@ module control(
 			// Lui <= (~opcode[6]) & (opcode[5]) & (opcode[4]) & (~opcode[3]) & (opcode[2]);		//01101 LUI
 			// Auipc <= (~opcode[6]) & (~opcode[5]) & (opcode[4]) & (~opcode[3]) & (opcode[2]);	//00101 AUIPC
 			// Fence <= (~opcode[5]) & opcode[3] & (opcode[2]);
-			ex_is_pc <= opcode[2] & (~(opcode[5] | opcode[4]));
+			ex_is_pc <= opcode[2] & (~(opcode[5] & opcode[4]));
 		end
 	end
 

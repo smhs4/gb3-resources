@@ -59,20 +59,21 @@ module regfile(clk, write, rd_addr, rd_data, rs1_addr, rs1_data, rs2_addr, rs2_d
 	 */
 	reg [31:0]	regfile[31:0];
 
-	/*
-	 *	buffer to store address at each positive clock edge
-	 */
-	// reg [4:0]	rs1_addr_buf;
-	// reg [4:0]	rs2_addr_buf;
+	wire [31:0] ra = regfile[1];
+
+	wire [31:0] a0 = regfile[10];
+	wire [31:0] a1 = regfile[11];
+	wire [31:0] a2 = regfile[12];
+	wire [31:0] a3 = regfile[13];
+	wire [31:0] a4 = regfile[14];
+	wire [31:0] a5 = regfile[15];
 
 	/*
 	 *	registers for forwarding
 	 */
 	reg [31:0]	regDatA;
 	reg [31:0]	regDatB;
-	// reg [31:0]	rd_addr_buf;
 	reg [31:0]	rd_data_buf;
-	// reg		write_buf;
 
 	/*
 	 *	The `initial` statement below uses Yosys's support for nonzero
@@ -86,9 +87,9 @@ module regfile(clk, write, rd_addr, rd_data, rs1_addr, rs1_data, rs2_addr, rs2_d
 	 */
 
 	/*
-	 *	Sets register 0 to 0
+	 *	Sets registers
 	 */
-	 integer i;
+	integer i;
 	initial begin
 		
 		for (i = 0; i < 32; i = i+1) begin

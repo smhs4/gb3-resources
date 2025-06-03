@@ -1,9 +1,9 @@
-`timescale 10ns/1ns
+`timescale 1ns/1ns
 
 
 module testbench();
     wire      led;                //blinky led
-    reg       reset;
+    wire       reset;
 
     wire           uart_rx = 1'b0;        //uart receive into fpga from bluetooth/FT2232
     wire          uart_tx;        //uart transmit out from fpga to bluetooth/FT2232
@@ -23,7 +23,6 @@ module testbench();
     wire [2:0]  data_mode;
 
 
-    reg [31:0] cpu_clk_counter;
 	reg [31:0] clk_counter;
 	reg [10:0] capture_counter;
 
@@ -33,43 +32,50 @@ module testbench();
 		$dumpvars;
         core_clock <=0;
 		source_clock <= 0;
-		cpu_clk_counter <= 0;
 		capture_counter <= 10;
 		clk_counter <=0;
-        reset <= 1'b1;
-        #10
-        reset <= 1'b0;
+        // reset <= 1'b1;
+        // #10
+        // reset <= 1'b0;
 	end
 	wire forcehalt;
 	wire dump_start;
 
-	assign forcehalt = (cpu_clk_counter > 32'h80) | (clk_counter > 32'h100);
-	assign dump_start = clk_counter > 1;
+	assign forcehalt = (clk_counter > 32'h156ec34);
 
+    reg [2:0] reset_counter;
+
+    initial begin
+        reset_counter = 3'b111;
+    end
+
+    always @(posedge core_clock) begin
+        if (reset_counter[2]) reset_counter <=reset_counter-1;
+    end
+
+    assign reset = reset_counter[2];
 	// wire program_halt = |inst_in[31:20];
-	always @(posedge source_clock) begin
-		clk_counter <= clk_counter+1;
-	end
 	always @(posedge core_clock) begin
-		cpu_clk_counter <= cpu_clk_counter+1;
-		if (led) begin
-			capture_counter <= capture_counter+1;
-		end
+		clk_counter <= clk_counter+1;
+
+        // if (instruction_address == 32'h054) begin
+        //     $display("memcpy finished");
+        //     $finish;
+        // end
+		// if (led) begin
+		// 	capture_counter <= capture_counter+1;
+        //     $display("capture_counter: %d", capture_counter);
+		// end
 	end
-	always @(posedge dump_start or posedge led) begin
-		$dumpon;
-	end
+	// always @(posedge led) begin
+	// 	$dumpon;
+	// end
 	always @(posedge forcehalt or posedge capture_counter[5]) begin
 		$finish;
 	end
 
 	always
 	#1 source_clock = ~source_clock;
-	// SB_HFOSC #(.CLKHF_DIV("0b11")) OSCInst0 (
-	// 	.CLKHFEN(1'b1),
-	// 	.CLKHFPU(1'b1),
-	// 	.CLKHF(source_clock)
-	// );
 
     assign uncore_clock = source_clock;
 
@@ -82,6 +88,12 @@ module testbench();
 
     always @(posedge uncore_clock) begin
         core_clock = ~core_clock;
+        if ((data_address == 32'h2004) & (data_write_enable == 1'b1)) begin
+            $dumpon;
+        end
+        if ((data_address == 32'h2008) & (data_write_enable == 1'b1)) begin
+            $finish;
+        end
     end
 
     cpu_core cpu(

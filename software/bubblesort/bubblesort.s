@@ -1210,7 +1210,7 @@ sort:
 	lw	a4,-20(s0)		# tmp126, i
 	lw	a5,-24(s0)		# tmp127, maxindex
 	blt	a4,a5,.L5	#, tmp126, tmp127,
-# bubblesort.c:42:     maxindex--;
+# bubblesort.c:43:     maxindex--;
 	lw	a5,-24(s0)		# tmp129, maxindex
 	addi	a5,a5,-1	#, tmp128, tmp129
 	sw	a5,-24(s0)	# tmp128, maxindex
@@ -1218,11 +1218,11 @@ sort:
 # bubblesort.c:25:   while (maxindex > 0) {
 	lw	a5,-24(s0)		# tmp130, maxindex
 	bgtz	a5,.L6	#, tmp130,
-# bubblesort.c:47:   return *((int *)bsort_input);
+# bubblesort.c:49:   return *((int *)bsort_input);
 	addi	a5,s0,-1092	#, bsort_input.0_17,
-# bubblesort.c:47:   return *((int *)bsort_input);
+# bubblesort.c:49:   return *((int *)bsort_input);
 	lw	a5,0(a5)		# _33, MEM[(int *)bsort_input.0_17]
-# bubblesort.c:48: }
+# bubblesort.c:50: }
 	mv	a0,a5	#, <retval>
 	lw	ra,1100(sp)		#,
 	lw	s0,1096(sp)		#,
@@ -1238,20 +1238,20 @@ main:
 	sw	s0,8(sp)	#,
 	addi	s0,sp,16	#,,
 .L9:
-# bubblesort.c:52:   *((unsigned int *)0x2000) = 0xff;
+# bubblesort.c:54:   *((unsigned int *)0x2000) = 0xff;
 	li	a5,8192		# _1,
-# bubblesort.c:52:   *((unsigned int *)0x2000) = 0xff;
+# bubblesort.c:54:   *((unsigned int *)0x2000) = 0xff;
 	li	a4,255		# tmp75,
 	sw	a4,0(a5)	# tmp75, *_1
-# bubblesort.c:53:    sort();
-	call	sort		#
-# bubblesort.c:54:    *((unsigned int *)0x2000) = 0x00;
-	li	a5,8192		# _2,
-# bubblesort.c:54:    *((unsigned int *)0x2000) = 0x00;
-	sw	zero,0(a5)	#, *_2
 # bubblesort.c:55:    sort();
 	call	sort		#
-# bubblesort.c:52:   *((unsigned int *)0x2000) = 0xff;
+# bubblesort.c:56:    *((unsigned int *)0x2000) = 0x00;
+	li	a5,8192		# _2,
+# bubblesort.c:56:    *((unsigned int *)0x2000) = 0x00;
+	sw	zero,0(a5)	#, *_2
+# bubblesort.c:57:    sort();
+	call	sort		#
+# bubblesort.c:54:   *((unsigned int *)0x2000) = 0xff;
 	j	.L9		#
 	.size	main, .-main
 	.ident	"GCC: (GNU) 8.2.0"

@@ -39,9 +39,11 @@ int sort(void) {
       //  *((unsigned int *)0x2004) = i;
     }
 
+    // *((unsigned int *)0x2000) = 
     maxindex--;
   }
   // *gDebugLedsMemoryMappedRegister = 0xFF;
+  // *((unsigned int *)0x2004) = 0x0;
   // *((unsigned int *)0x2000) = 0xff;
 
   return *((int *)bsort_input);

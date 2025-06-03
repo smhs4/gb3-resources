@@ -2,18 +2,18 @@ module top(
     led,
     uart_rx,
     uart_tx,
-    reset
+    // reset
 );
 
     output      led;                //blinky led
-    input       reset;
+    wire       reset;
 
     input           uart_rx;        //uart receive into fpga from bluetooth/FT2232
     output          uart_tx;        //uart transmit out from fpga to bluetooth/FT2232
 
     wire source_clock;
     wire core_clock;
-    wire uncore_clock;
+    // wire uncore_clock;
 
     wire [31:0] data_core_to_mem;
     wire [31:0] data_mem_to_core;
@@ -25,14 +25,46 @@ module top(
     wire        data_write_enable;
     wire [2:0]  data_mode;
 
-	SB_HFOSC #(.CLKHF_DIV("0b11")) OSCInst0 (
+    reg [2:0] reset_counter;
+
+    initial begin
+        reset_counter = 3'b111;
+    end
+
+    always @(posedge core_clock) begin
+        if (reset_counter[2]) reset_counter <=reset_counter-1;
+    end
+
+    wire locked;
+
+    assign reset = reset_counter[2] | (~locked);
+
+	SB_HFOSC #(.CLKHF_DIV("0b00")) OSCInst0 (
 		.CLKHFEN(1'b1),
 		.CLKHFPU(1'b1),
 		.CLKHF(source_clock)
 	);
-
-    assign uncore_clock = source_clock;
-    assign core_clock = source_clock;
+	SB_PLL40_CORE #(
+        .FEEDBACK_PATH("SIMPLE"),
+        .DIVR(4'b0010),            // 0
+        .DIVF(7'b011111),         // 15
+        .DIVQ(3'b110),             // 5
+        .FILTER_RANGE(3'b001),		// 4
+        .PLLOUT_SELECT("GENCLK"),  // use PLLOUTCORE
+        .DELAY_ADJUSTMENT_MODE_FEEDBACK("FIXED"),
+        .DELAY_ADJUSTMENT_MODE_RELATIVE("FIXED"),
+        .FDA_FEEDBACK(4'b0000),
+        .FDA_RELATIVE(4'b0000),
+        .SHIFTREG_DIV_MODE(1'b0)
+    ) pll_inst (
+        .REFERENCECLK(source_clock),     // 48 MHz input
+        .PLLOUTCORE(core_clock),      // 20 MHz output
+        .RESETB(1'b1),           // keep high when not resetting
+        .BYPASS(1'b0),
+        .LOCK(locked)              // goes high when PLL is locked
+    );
+    // assign uncore_clock = source_clock;
+    // assign core_clock = source_clock;
     /*
      * The craziest clock system you will ever see
 
