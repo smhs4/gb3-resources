@@ -8,7 +8,10 @@ module data_memory(
     input   [2:0]   mode,
     output  [31:0]  data_out,
     output          led,
-    output          uart_tx
+    output reg [31:0]	addr_reg,
+    output reg [31:0]  write_data_reg,
+    output reg         write_enable_reg
+
 );
 
 
@@ -23,13 +26,10 @@ module data_memory(
         led_reg = 0;
 	end
 
-    reg [31:0] addr_reg;
-    reg [31:0] write_data_reg;
-    reg write_enable_reg;
-    reg [31:0] led_reg;
+    reg [31:0]  led_reg;
 
     assign led = led_reg[0];
-    assign uart_tx = led_reg[1];
+    // assign uart_tx = led_reg[1];
 
     // reg [3:0]   write_mask;
     wire [3:0]   write_mask = mode[1] ? 4'b1111 : ((mode[0]) ? ((address[1]) ? 4'b1100 : 4'b0011) : (4'b0001 << (address[1:0])));

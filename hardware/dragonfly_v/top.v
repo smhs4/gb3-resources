@@ -1,11 +1,11 @@
 module top(
-    led,
+    led_out,
     uart_rx,
     uart_tx,
     // reset
 );
 
-    output      led;                //blinky led
+    output      led_out;                //blinky led_out
     wire       reset;
 
     input           uart_rx;        //uart receive into fpga from bluetooth/FT2232
@@ -95,6 +95,10 @@ module top(
         .out(instruction_mem_to_core)
     );
 
+    wire [31:0] io_address;
+    wire [31:0] io_data;
+    wire        io_write_enable;
+
     data_memory data_memory(
         .clock(core_clock),
         .address(data_address),
@@ -102,9 +106,23 @@ module top(
         .data_out(data_mem_to_core),
         .write_enable(data_write_enable),
         .mode(data_mode),
-        .led(led),
+        .addr_reg(io_address),
+        .write_data_reg(io_data),
+        .write_enable_reg(io_write_enable)
+    );
+
+    uart uart(
+        .core_clock(core_clock),
+        .address(io_address),
+        .data_in(io_data[7:0]),
+        .write_enable(io_write_enable),
+        .source_clock(source_clock),
+        .data_out(),
+        .uart_rx(uart_rx),
         .uart_tx(uart_tx)
     );
+
+    assign led_out = ~uart_tx;
 
 
 endmodule

@@ -8,6 +8,7 @@ read_verilog verilog/control.v
 read_verilog verilog/data_memory.v
 read_verilog verilog/imm_gen.v
 read_verilog verilog/instruction_memory.v
+read_verilog verilog/uart.v
 
 synth_ice40 -noflatten -blif build/dragonfly_v.blif
 

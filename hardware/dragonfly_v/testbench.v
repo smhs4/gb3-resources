@@ -27,7 +27,7 @@ module testbench();
 	reg [10:0] capture_counter;
 
 	initial begin
-		$dumpoff;
+		// $dumpoff;
 		$dumpfile ("proc_sim.vcd");
 		$dumpvars;
         core_clock <=0;
@@ -115,6 +115,20 @@ module testbench();
         .out(instruction_mem_to_core)
     );
 
+    // data_memory data_memory(
+    //     .clock(core_clock),
+    //     .address(data_address),
+    //     .data_in(data_core_to_mem),
+    //     .data_out(data_mem_to_core),
+    //     .write_enable(data_write_enable),
+    //     .mode(data_mode),
+    //     .led(led),
+    //     .uart_tx(uart_tx)
+    // );
+    wire [31:0] io_address;
+    wire [31:0] io_data;
+    wire        io_write_enable;
+
     data_memory data_memory(
         .clock(core_clock),
         .address(data_address),
@@ -122,7 +136,15 @@ module testbench();
         .data_out(data_mem_to_core),
         .write_enable(data_write_enable),
         .mode(data_mode),
-        .led(led),
-        .uart_tx(uart_tx)
+        .addr_reg(io_address),
+        .write_data_reg(io_data),
+        .write_enable_reg(io_write_enable)
     );
+
+    always @(posedge core_clock) begin
+        if ((io_address == 32'h2010) && io_write_enable) begin
+            $write("%c",io_data[7:0]);
+        end
+    end
+
 endmodule
