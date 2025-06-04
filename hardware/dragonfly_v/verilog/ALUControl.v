@@ -51,33 +51,22 @@
 
 
 module ALUControl(
-	clock, 
-	reset, 
-	Opcode,
-	funct3, 
-	is_variant, 
-	ex_alu_arithmetic_select,
-	ex_alu_shift_select, 
-	ex_alu_logic_select,
-	ex_alu_passthrough_a,
-	ex_alu_is_eq_compare,
-	ex_alu_invert_branch_condition,
-	ex_alu_is_signed_compare
-);
-	input 			clock;
-	input			reset;
-	input [2:0]		funct3;
-	input			is_variant;
+	input 				clock,
+	input				reset,
+	input 		[6:0]	Opcode,
+	input 		[2:0]	funct3,
+	input				is_variant,
 	
-	input 	   [6:0]	Opcode;
-	output reg [1:0]	ex_alu_arithmetic_select;
-	output reg [1:0]	ex_alu_shift_select;
-	output reg [1:0]	ex_alu_logic_select;
-	output reg 			ex_alu_passthrough_a;
+	output reg 	[1:0]	ex_alu_arithmetic_select,
+	output reg 	[1:0]	ex_alu_shift_select,
+	output reg 	[1:0]	ex_alu_logic_select,
+	output reg 			ex_alu_passthrough_a,
 
-	output reg 			ex_alu_is_eq_compare;
-	output reg 			ex_alu_invert_branch_condition;
-	output reg 			ex_alu_is_signed_compare;
+	output reg 			ex_alu_is_eq_compare,
+	output reg 			ex_alu_invert_branch_condition,
+	output reg 			ex_alu_is_signed_compare
+);
+
 
 	always @(posedge clock) begin
 		if (reset) begin //complete

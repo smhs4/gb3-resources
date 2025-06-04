@@ -44,16 +44,16 @@
 
 
 
-module regfile(clk, write, rd_addr, rd_data, rs1_addr, rs1_data, rs2_addr, rs2_data);
-	input		clk;
-	input		write;
-	input [4:0]	rd_addr;
-	input [31:0]	rd_data;
-	input [4:0]	rs1_addr;
-	output [31:0]	rs1_data;
-	input [4:0]	rs2_addr;
-	output [31:0]	rs2_data;
-
+module regfile(
+	input			clk,
+	input			write,
+	input 	[4:0]		rd_addr,
+	input 	[31:0]	rd_data,
+	input 	[4:0]		rs1_addr,
+	output 	[31:0]	rs1_data,
+	input 	[4:0]	rs2_addr,
+	output 	[31:0]	rs2_data
+);
 	/*
 	 *	register file, 32 x 32-bit registers
 	 */

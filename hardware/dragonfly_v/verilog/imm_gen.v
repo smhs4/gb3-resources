@@ -42,13 +42,13 @@
 
 
 
-module imm_gen(clock, reset, inst, id_jump_offset, ex_imm);
-	input 				clock;
-	input				reset;
-	input [31:0]		inst;
-	output [31:0]		id_jump_offset;
-	output reg [31:0]	ex_imm;
-
+module imm_gen(
+	input 				clock,
+	input				reset,
+	input [31:0]		inst,
+	output [31:0]		id_jump_offset,
+	output reg [31:0]	ex_imm
+);
 	assign id_jump_offset = inst[2] ? { {12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0 } : { {20{inst[31]}}, inst[7], inst[30:25], inst[11:8], 1'b0 };
 
 	always @(posedge clock) begin

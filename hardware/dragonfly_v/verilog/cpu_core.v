@@ -1,26 +1,18 @@
 module cpu_core(
-    core_clock,
-	core_reset,
-    instruction_address,
-    instruction_in,
-    data_address,
-    data_out,
-    data_in,
-    data_mode,
-    data_write_enable
+    input           core_clock,      //input clock
+	input			core_reset,		//core_reset input (active high)
+
+	output	[31:0]	instruction_address,
+	input   [31:0]	instruction_in,
+
+	output	[31:0]	data_address,
+	output	[31:0]	data_out,
+	input	[31:0]	data_in,
+	output	[2:0]	data_mode,	//note sign extension is done externally
+	output			data_write_enable	//data memory write enable  (active high)
 );
 
-    input           core_clock;      //input clock
-	input			core_reset;		//core_reset input (active high)
 
-    output	[31:0]	instruction_address;
-    input   [31:0]	instruction_in;
-
-	output	[31:0]	data_address;
-	output	[31:0]	data_out;
-	input	[31:0]	data_in;
-	output	[2:0]	data_mode;	//note sign extension is done externally
-	output			data_write_enable;	//data memory write enable  (active high)
 
     wire    [31:0]  id_pc;
     wire    [31:0]  id_jump_offset;

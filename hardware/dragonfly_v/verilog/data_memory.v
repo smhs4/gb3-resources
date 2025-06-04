@@ -1,23 +1,16 @@
 `define kDATA_MEMORY_SIZE 10
 
 module data_memory(
-    clock,
-    address,
-    data_in,
-    data_out,
-    write_enable,
-    mode,
-    led,
-    uart_tx,
+    input           clock,
+    input   [31:0]  address,
+    input   [31:0]  data_in,
+    input           write_enable,
+    input   [2:0]   mode,
+    output  [31:0]  data_out,
+    output          led,
+    output          uart_tx
 );
-    input           clock;
-    input [31:0]    address;
-    input [31:0]    data_in;
-    input           write_enable;
-    input [2:0]     mode;
-    output [31:0]   data_out;
-    output led;
-    output uart_tx;
+
 
 
 	reg [31:0]		data_memory[0:2**`kDATA_MEMORY_SIZE-1];

@@ -56,32 +56,18 @@
  *	fed to the ALU.
  */
 module alu(
-	arithmetic_select,
-	shift_select,
-	logic_select,
-	passthrough_a,
-	is_eq_compare,
-	invert_branch_condition,
-	is_signed_compare,
-	A, 
-	B, 
-	alu_result, 
-	branch_enable
+	input [1:0]	arithmetic_select,
+	input [1:0]	shift_select,
+	input [1:0]	logic_select,
+	input 		passthrough_a,
+	input 		is_eq_compare,
+	input 		invert_branch_condition,
+	input 		is_signed_compare,
+	input [31:0]		A,
+	input [31:0]		B,
+	output reg [31:0]	alu_result,
+	output wire		branch_enable
 );
-
-
-	input [1:0]	arithmetic_select;
-	input [1:0]	shift_select;
-	input [1:0]	logic_select;
-	input 		passthrough_a;
-	input 		is_eq_compare;
-	input 		invert_branch_condition;
-	input 		is_signed_compare;
-
-	input [31:0]		A;
-	input [31:0]		B;
-	output reg [31:0]	alu_result;
-	output wire		branch_enable;
 
 	wire [31:0] compare_A = {(A[31] ^ is_signed_compare),A[30:0]};
 	wire [31:0] compare_B = {(B[31] ^ is_signed_compare),B[30:0]};
