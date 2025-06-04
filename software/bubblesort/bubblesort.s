@@ -1237,12 +1237,11 @@ main:
 	sw	ra,12(sp)	#,
 	sw	s0,8(sp)	#,
 	addi	s0,sp,16	#,,
-.L9:
 # bubblesort.c:54:   *((unsigned int *)0x2000) = 0xff;
 	li	a5,8192		# _1,
 # bubblesort.c:54:   *((unsigned int *)0x2000) = 0xff;
-	li	a4,255		# tmp75,
-	sw	a4,0(a5)	# tmp75, *_1
+	li	a4,255		# tmp76,
+	sw	a4,0(a5)	# tmp76, *_1
 # bubblesort.c:55:    sort();
 	call	sort		#
 # bubblesort.c:56:    *((unsigned int *)0x2000) = 0x00;
@@ -1251,7 +1250,12 @@ main:
 	sw	zero,0(a5)	#, *_2
 # bubblesort.c:57:    sort();
 	call	sort		#
-# bubblesort.c:54:   *((unsigned int *)0x2000) = 0xff;
-	j	.L9		#
+	li	a5,0		# _8,
+# bubblesort.c:59: }
+	mv	a0,a5	#, <retval>
+	lw	ra,12(sp)		#,
+	lw	s0,8(sp)		#,
+	addi	sp,sp,16	#,,
+	jr	ra		#
 	.size	main, .-main
 	.ident	"GCC: (GNU) 8.2.0"

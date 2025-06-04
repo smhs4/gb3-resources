@@ -50,12 +50,12 @@ int sort(void) {
 }
 
 int main(void) {
- while(1){
+//  while(1){
   *((unsigned int *)0x2000) = 0xff;
    sort();
    *((unsigned int *)0x2000) = 0x00;
    sort();
- }
+//  }
 }
 
 // int main (void) {
