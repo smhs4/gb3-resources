@@ -26,12 +26,14 @@ module top(
     wire [2:0]  data_mode;
 
     reg [2:0] reset_counter;
+    reg [2:0] led_counter;
 
     initial begin
         reset_counter = 3'b111;
     end
 
     always @(posedge core_clock) begin
+        led_counter <= led_counter+1;
         if (reset_counter[2]) reset_counter <=reset_counter-1;
     end
 
@@ -98,6 +100,7 @@ module top(
     wire [31:0] io_address;
     wire [31:0] io_data;
     wire        io_write_enable;
+    wire        io_led;
 
     data_memory data_memory(
         .clock(core_clock),
@@ -108,8 +111,11 @@ module top(
         .mode(data_mode),
         .addr_reg(io_address),
         .write_data_reg(io_data),
-        .write_enable_reg(io_write_enable)
+        .write_enable_reg(io_write_enable),
+        .led(io_led)
     );
+
+    assign led_out = io_led & (&led_counter);
 
     uart uart(
         .core_clock(core_clock),
@@ -121,8 +127,5 @@ module top(
         .uart_rx(uart_rx),
         .uart_tx(uart_tx)
     );
-
-    assign led_out = ~uart_tx;
-
 
 endmodule
