@@ -77,6 +77,25 @@ module alu(
 	reg [31:0] logic_result;
 	reg [31:0] shift_logic_result;
 
+	/* DSP module */ 
+	wire carry_out;
+	wire sub = |arithmetic_select;
+	wire hold = &arithmetic_select;
+	wire [31:0] dsp_out;
+	wire [31:0] input1 = arithmetic_select[1] & ~arithmetic_select[0] ? compare_A : A; 
+	wire [31:0] input2 = arithmetic_select[1] & ~arithmetic_select[0] ? compare_B : B;
+
+	DSPAddSub addsub(
+		.input1(input1),
+		.input2(input2),
+		.out(dsp_out),
+		.carry_out(carry_out),
+		.sub(sub),
+		.hold(1'b0)
+	);
+
+	
+
 	always @(*) begin			//conbinational always
 		case (logic_select)
 			`ALU_SELECT_XOR:	logic_result = A ^ B;
@@ -93,14 +112,14 @@ module alu(
 			default:	shift_logic_result = 32'bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;	//should never happen
 		endcase
 		case (arithmetic_select)
-			`ALU_SELECT_ADD: alu_result = A + B;
-			`ALU_SELECT_SUB: alu_result = A - B;
-			`ALU_SELECT_SLT_U: alu_result = (compare_A < compare_B) ? 32'b1 : 32'b0;
+			`ALU_SELECT_ADD,
+			`ALU_SELECT_SUB: alu_result = dsp_out;
+			`ALU_SELECT_SLT_U: alu_result = ~carry_out ? 32'b1 : 32'b0;
 			`ALU_SELECT_LOGIC_SHIFT: alu_result = shift_logic_result;
 			default:	alu_result = 32'bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;	//should never happen
 		endcase
 	end
 
-	assign branch_enable = ((is_eq_compare) ? (A==B) : (compare_A < compare_B)) ^ (invert_branch_condition);
+	assign branch_enable = ((is_eq_compare) ? (A==B) : ~carry_out) ^ (invert_branch_condition);
 
 endmodule

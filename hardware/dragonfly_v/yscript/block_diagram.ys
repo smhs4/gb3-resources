@@ -8,5 +8,6 @@ read_verilog verilog/control.v
 read_verilog verilog/data_memory.v
 read_verilog verilog/imm_gen.v
 read_verilog verilog/instruction_memory.v
+read_verilog verilog/DSPAddSub.v
 
 show -colors 1 -format dot

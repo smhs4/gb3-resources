@@ -140,7 +140,7 @@ module ALUControl(
 				*	Branch, SB-Type
 				*/
 				`kRV32I_INSTRUCTION_OPCODE_BRANCH: begin //complete
-					ex_alu_arithmetic_select 		<= 2'bxx;
+					ex_alu_arithmetic_select 		<= `ALU_SELECT_SLT_U;
 					ex_alu_shift_select 			<= 2'bxx;
 					ex_alu_logic_select 			<= 2'bxx;
 					ex_alu_passthrough_a 			<= 1'bx;
