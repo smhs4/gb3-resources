@@ -43,12 +43,12 @@ void print(char *str)
 }
 
 int main(void) {
-//  while(1){
+ while(1){
 	*((unsigned int *)0x2000) = 0xff;
 	sort();
 	*((unsigned int *)0x2000) = 0x00;
 	sort();
-	char *hello = "hello, world\n";
-	print(hello);
-//  }
+	// char *hello = "hello, world\n";
+	// print(hello);
+ }
 }

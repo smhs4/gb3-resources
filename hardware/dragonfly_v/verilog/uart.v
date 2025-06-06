@@ -85,6 +85,6 @@ module uart (
 	wire [9:0] tx_data = {1'b1,send_data_reg,1'b0};
 	assign uart_tx = (bit_counter_send > 9) ? tx_data[9] : tx_data[bit_counter_send];
 
-	assign data_out = address[0] ? {6'b0,data_ready_out, busy} : data_receive_data_reg; //read: register 0 = data register, 1 = status register
+	assign data_out = address[0] ? {6'b0,data_ready_out, busy} : receive_data_reg; //read: register 0 = data register, 1 = status register
 
 endmodule

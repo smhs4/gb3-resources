@@ -1257,38 +1257,35 @@ print:
 	lbu	a5,0(a5)	# _5, *str_6
 # bubblesort.c:38: 	while ((*str)!=0)
 	bnez	a5,.L10	#, _5,
-# bubblesort.c:42: }
+# bubblesort.c:43: }
 	nop	
 	lw	s0,28(sp)		#,
 	addi	sp,sp,32	#,,
 	jr	ra		#
 	.size	print, .-print
-	.section	.rodata
-	.align	2
-.LC1:
-	.string	"hello, world\n"
-	.text
 	.align	2
 	.globl	main
 	.type	main, @function
 main:
-	addi	sp,sp,-32	#,,
-	sw	ra,28(sp)	#,
-	sw	s0,24(sp)	#,
-	addi	s0,sp,32	#,,
-# bubblesort.c:49: 		char *hello = "hello, world\n";
-	lui	a5,%hi(.LC1)	# tmp75,
-	addi	a5,a5,%lo(.LC1)	# tmp74, tmp75,
-	sw	a5,-20(s0)	# tmp74, hello
-# bubblesort.c:50: 		print(hello);
-	lw	a0,-20(s0)		#, hello
-	call	print		#
-	li	a5,0		# _4,
-# bubblesort.c:60: }
-	mv	a0,a5	#, <retval>
-	lw	ra,28(sp)		#,
-	lw	s0,24(sp)		#,
-	addi	sp,sp,32	#,,
-	jr	ra		#
+	addi	sp,sp,-16	#,,
+	sw	ra,12(sp)	#,
+	sw	s0,8(sp)	#,
+	addi	s0,sp,16	#,,
+.L12:
+# bubblesort.c:47: 	*((unsigned int *)0x2000) = 0xff;
+	li	a5,8192		# _1,
+# bubblesort.c:47: 	*((unsigned int *)0x2000) = 0xff;
+	li	a4,255		# tmp75,
+	sw	a4,0(a5)	# tmp75, *_1
+# bubblesort.c:48: 	sort();
+	call	sort		#
+# bubblesort.c:49: 	*((unsigned int *)0x2000) = 0x00;
+	li	a5,8192		# _2,
+# bubblesort.c:49: 	*((unsigned int *)0x2000) = 0x00;
+	sw	zero,0(a5)	#, *_2
+# bubblesort.c:50: 	sort();
+	call	sort		#
+# bubblesort.c:47: 	*((unsigned int *)0x2000) = 0xff;
+	j	.L12		#
 	.size	main, .-main
 	.ident	"GCC: (GNU) 8.2.0"

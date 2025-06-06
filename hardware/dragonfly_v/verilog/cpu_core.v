@@ -1,5 +1,5 @@
 module cpu_core(
-    input           core_clock,      //input clock
+    input           core_clock,     //input clock
 	input			core_reset,		//core_reset input (active high)
 
 	output	[31:0]	instruction_address,
@@ -8,8 +8,9 @@ module cpu_core(
 	output	[31:0]	data_address,
 	output	[31:0]	data_out,
 	input	[31:0]	data_in,
-	output	[2:0]	data_mode,	//note sign extension is done externally
-	output			data_write_enable	//data memory write enable  (active high)
+	output	[2:0]	data_mode,	        //note sign extension is done externally
+	output			data_write_enable,	//data memory write enable  (active high)
+    output          data_read_enable
 );
 
 
@@ -27,7 +28,6 @@ module cpu_core(
 
 
 
-    wire ex_is_ld;
     wire ex_is_pc_instruction;          //PC into ALU: AUIPC(00101), JAL(11011), JALR(11001)
     wire ex_is_imm_instruction;         //IMM into ALU: ALU-imm arithmetic(00100), LUI(01101), AUIPC(00101), JAL(11011), JALR(11001)
     wire ex_is_branch;
@@ -94,7 +94,7 @@ module cpu_core(
     wire [31:0]     ex_alu_result;
     wire            ex_branch_enable;
 
-    wire [31:0] ex_result = ex_is_ld ? data_in : ex_alu_result;
+    wire [31:0] ex_result = data_read_enable ? data_in : ex_alu_result;
 
 
     d_flip_flop alternative_pc (
@@ -157,7 +157,7 @@ module cpu_core(
         .flush(ex_flush),
         .RegWrite(ex_reg_write),
         .data_mem_write(data_write_enable),
-        .data_mem_read(ex_is_ld),
+        .data_mem_read(data_read_enable),
         .ALUSrc(ex_is_imm_instruction),
         .Branch(ex_is_branch),
         .Jalr(ex_is_jalr),

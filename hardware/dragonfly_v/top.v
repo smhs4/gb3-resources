@@ -23,6 +23,7 @@ module top(
     wire [31:0] data_address;
 
     wire        data_write_enable;
+    wire        data_read_enable;
     wire [2:0]  data_mode;
 
     reg [2:0] reset_counter;
@@ -48,10 +49,10 @@ module top(
 	);
 	SB_PLL40_CORE #(
         .FEEDBACK_PATH("SIMPLE"),
-        .DIVR(4'b0010),            // 0
-        .DIVF(7'b011111),         // 15
-        .DIVQ(3'b110),             // 5
-        .FILTER_RANGE(3'b001),		// 4
+        .DIVR(4'b0000),            // 0
+        .DIVF(7'b001011),         // 15
+        .DIVQ(3'b100),             // 5
+        .FILTER_RANGE(3'b100),		// 4
         .PLLOUT_SELECT("GENCLK"),  // use PLLOUTCORE
         .DELAY_ADJUSTMENT_MODE_FEEDBACK("FIXED"),
         .DELAY_ADJUSTMENT_MODE_RELATIVE("FIXED"),
@@ -87,7 +88,8 @@ module top(
         .data_out(data_core_to_mem),
         .data_in(data_mem_to_core),
         .data_mode(data_mode),
-        .data_write_enable(data_write_enable)
+        .data_write_enable(data_write_enable),
+        .data_read_enable(data_read_enable)
     );
 
     instruction_memory instruction_memory(
@@ -100,7 +102,7 @@ module top(
     wire [31:0] io_address;
     wire [31:0] io_data;
     wire        io_write_enable;
-    wire        io_led;
+    reg         io_led;
 
     data_memory data_memory(
         .clock(core_clock),
@@ -108,24 +110,30 @@ module top(
         .data_in(data_core_to_mem),
         .data_out(data_mem_to_core),
         .write_enable(data_write_enable),
+        .read_enable(data_read_enable),
         .mode(data_mode),
         .addr_reg(io_address),
         .write_data_reg(io_data),
-        .write_enable_reg(io_write_enable),
-        .led(io_led)
+        .write_enable_reg(io_write_enable)
     );
+
+    always @(posedge core_clock) begin
+        if(io_write_enable == 1'b1 && io_address == 32'h2000) begin
+            io_led <= io_data[0];
+        end
+    end
 
     assign led_out = io_led & (&led_counter);
 
-    uart uart(
-        .core_clock(core_clock),
-        .address(io_address),
-        .data_in(io_data[7:0]),
-        .write_enable(io_write_enable),
-        .source_clock(source_clock),
-        .data_out(),
-        .uart_rx(uart_rx),
-        .uart_tx(uart_tx)
-    );
+    // uart uart(
+    //     .core_clock(core_clock),
+    //     .address(io_address),
+    //     .data_in(io_data[7:0]),
+    //     .write_enable(io_write_enable),
+    //     .source_clock(source_clock),
+    //     .data_out(),
+    //     .uart_rx(uart_rx),
+    //     .uart_tx(uart_tx)
+    // );
 
 endmodule
