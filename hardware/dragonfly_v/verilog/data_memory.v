@@ -2,19 +2,13 @@
 
 module data_memory(
     input           clock,
-    input   [31:0]  address,
-    input   [31:0]  data_in,
+    input           select,
     input           write_enable,
     input           read_enable,
     input   [2:0]   mode,
+    input   [`kDATA_MEMORY_SIZE+1:0]  address,
+    input   [31:0]  data_in,
     output  [31:0]  data_out,
-    output reg [31:0]   addr_reg,
-    output reg [31:0]   write_data_reg,
-    output reg          write_enable_reg
-    // input   [31:0]  io_in_device_0,
-    // input   [31:0]  io_in_device_1,
-    // input   [31:0]  io_in_device_2,
-    // input   [31:0]  io_in_device_3,
 );
 
 	reg [31:0]		data_memory[0:2**`kDATA_MEMORY_SIZE-1];
@@ -34,11 +28,9 @@ module data_memory(
 
     wire [9:0] word_address = address[`kDATA_MEMORY_SIZE+1:2];
 
+    wire [31:0] memory_out;
+
 	always @(negedge clock) begin
-        //MMIO part
-        addr_reg <= address;
-        write_data_reg <= data_in;
-        write_enable_reg <= write_enable;
 
         //write part
         if (write_enable) begin
@@ -52,8 +44,10 @@ module data_memory(
 		
 	end
     // magic, madness, heaven, sin
-	assign data_out[7:0] = (address[1]) ? ((address[0]) ? read_word_buf[31:24] : read_word_buf[23:16]) : ((address[0]) ? read_word_buf[15:8] : read_word_buf[7:0]);
-	assign data_out[15:8] = (mode[1] | mode[0]) ? ((address[1]) ? read_word_buf[31:24] : read_word_buf[15:8]) : {8{((mode[2]) ? 1'b0 : data_out[7])}};
-    assign data_out[31:16] = (mode[1]) ? read_word_buf[31:16] : {16{(mode[2]) ? 1'b0 : ((mode[0]) ? data_out[15] : data_out[7])}};
+	assign memory_out[7:0] = (address[1]) ? ((address[0]) ? read_word_buf[31:24] : read_word_buf[23:16]) : ((address[0]) ? read_word_buf[15:8] : read_word_buf[7:0]);
+	assign memory_out[15:8] = (mode[1] | mode[0]) ? ((address[1]) ? read_word_buf[31:24] : read_word_buf[15:8]) : {8{((mode[2]) ? 1'b0 : memory_out[7])}};
+    assign memory_out[31:16] = (mode[1]) ? read_word_buf[31:16] : {16{(mode[2]) ? 1'b0 : ((mode[0]) ? memory_out[15] : memory_out[7])}};
+
+    assign data_out = memory_out;
 
 endmodule

@@ -15,8 +15,8 @@ module top(
     wire core_clock;
     // wire uncore_clock;
 
-    wire [31:0] data_core_to_mem;
-    wire [31:0] data_mem_to_core;
+    wire [31:0] core_data_out;
+    wire [31:0] core_data_in;
     wire [31:0] instruction_mem_to_core;
 
     wire [31:0] instruction_address;
@@ -85,7 +85,7 @@ module top(
     //     core_clock = ~core_clock;
     // end
 
-    assign uart_tx = core_clock;
+    // assign uart_tx = core_clock;
 
     cpu_core cpu(
         .core_clock(core_clock),
@@ -93,8 +93,8 @@ module top(
         .instruction_address(instruction_address),
         .instruction_in(instruction_mem_to_core),
         .data_address(data_address),
-        .data_out(data_core_to_mem),
-        .data_in(data_mem_to_core),
+        .data_out(core_data_out),
+        .data_in(core_data_in),
         .data_mode(data_mode),
         .data_write_enable(data_write_enable),
         .data_read_enable(data_read_enable)
@@ -107,41 +107,49 @@ module top(
         .out(instruction_mem_to_core)
     );
 
-    wire [31:0] io_address;
-    wire [31:0] io_data;
-    wire        io_write_enable;
-    reg         io_led;
+    wire io_select = data_address[13];
+    wire [31:0] mem_data_out;
+    reg         led_reg;
 
     data_memory data_memory(
         .clock(core_clock),
-        .address(data_address),
-        .data_in(data_core_to_mem),
-        .data_out(data_mem_to_core),
+        .select(~io_select),            //memory occupies even half of every 16KiB (0-8191, 16384-24575, etc.) within each 8K memory chunk two repeats of 4K memory exists
         .write_enable(data_write_enable),
         .read_enable(data_read_enable),
         .mode(data_mode),
-        .addr_reg(io_address),
-        .write_data_reg(io_data),
-        .write_enable_reg(io_write_enable)
+        .address(data_address[11:0]),
+        .data_in(core_data_out),
+        .data_out(mem_data_out)
     );
 
-    always @(posedge core_clock) begin
-        if(io_write_enable == 1'b1 && io_address == 32'h2000) begin
-            io_led <= io_data[0];
+    wire led_select = io_select & (~data_address[2]);   //address 0x2000
+    wire uart_select = io_select & (data_address[2]);   //address 0x2004
+
+    wire [7:0] uart_data_out;
+
+    uart uart(
+        .core_clock(core_clock),
+        .source_clock(source_clock),
+        .write_enable(data_write_enable),
+        .read_enable(data_read_enable),
+        .select(uart_select),
+        .address(data_address[1:0]),
+        .data_in(core_data_out[7:0]),
+        .data_out(uart_data_out),
+        .uart_rx(uart_rx),
+        .uart_tx(uart_tx)
+    );
+
+    assign core_data_in = io_select ? {24'b0,uart_data_out} : mem_data_out; //uart occupies the entire io space
+
+    /*
+     * LED module
+     */
+    always @(negedge core_clock) begin
+        if(data_write_enable && led_select) begin
+            led_reg <= core_data_out[0];
         end
     end
 
-    assign led_out = io_led & (&led_counter);
-
-    // uart uart(
-    //     .core_clock(core_clock),
-    //     .address(io_address),
-    //     .data_in(io_data[7:0]),
-    //     .write_enable(io_write_enable),
-    //     .source_clock(source_clock),
-    //     .data_out(),
-    //     .uart_rx(uart_rx),
-    //     .uart_tx(uart_tx)
-    // );
-
+    assign led_out = led_reg & (&led_counter);
 endmodule
