@@ -47,25 +47,31 @@ module top(
 		.CLKHFPU(1'b1),
 		.CLKHF(source_clock)
 	);
-	SB_PLL40_CORE #(
-        .FEEDBACK_PATH("SIMPLE"),
-        .DIVR(4'b0000),            // 0
-        .DIVF(7'b001011),         // 15
-        .DIVQ(3'b100),             // 5
-        .FILTER_RANGE(3'b100),		// 4
-        .PLLOUT_SELECT("GENCLK"),  // use PLLOUTCORE
-        .DELAY_ADJUSTMENT_MODE_FEEDBACK("FIXED"),
-        .DELAY_ADJUSTMENT_MODE_RELATIVE("FIXED"),
-        .FDA_FEEDBACK(4'b0000),
-        .FDA_RELATIVE(4'b0000),
-        .SHIFTREG_DIV_MODE(1'b0)
-    ) pll_inst (
-        .REFERENCECLK(source_clock),     // 48 MHz input
-        .PLLOUTCORE(core_clock),      // 20 MHz output
-        .RESETB(1'b1),           // keep high when not resetting
-        .BYPASS(1'b0),
-        .LOCK(locked)              // goes high when PLL is locked
+
+    pll pll(
+        .clock_in(source_clock),
+        .clock_out(core_clock),
+        .locked(locked)
     );
+	// SB_PLL40_CORE #(
+    //     .FEEDBACK_PATH("SIMPLE"),
+    //     .DIVR(4'b0010),
+    //     .DIVF(7'b0100111),
+    //     .DIVQ(3'b101),
+    //     .FILTER_RANGE(3'b001),
+    //     .PLLOUT_SELECT("GENCLK"),  // use PLLOUTCORE
+    //     .DELAY_ADJUSTMENT_MODE_FEEDBACK("FIXED"),
+    //     .DELAY_ADJUSTMENT_MODE_RELATIVE("FIXED"),
+    //     .FDA_FEEDBACK(4'b0000),
+    //     .FDA_RELATIVE(4'b0000),
+    //     .SHIFTREG_DIV_MODE(1'b0)
+    // ) pll_inst (
+    //     .REFERENCECLK(source_clock),     // 48 MHz input
+    //     .PLLOUTCORE(core_clock),      // 20 MHz output
+    //     .RESETB(1'b1),           // keep high when not resetting
+    //     .BYPASS(1'b0),
+    //     .LOCK(locked)              // goes high when PLL is locked
+    // );
     // assign uncore_clock = source_clock;
     // assign core_clock = source_clock;
     /*
@@ -78,6 +84,8 @@ module top(
     // always @(posedge uncore_clock) begin
     //     core_clock = ~core_clock;
     // end
+
+    assign uart_tx = core_clock;
 
     cpu_core cpu(
         .core_clock(core_clock),
