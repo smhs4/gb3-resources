@@ -33,22 +33,41 @@ int sort(void) {
 	return *((int *)bsort_input);
 }
 
+volatile char * const uart_data_register = (char *) 0x2004;
+volatile char * const uart_status_register = (char *) 0x2005;
+
 void print(char *str)
 {
 	while ((*str)!=0)
 	{
-		*((unsigned int *)0x2010) = *(str++);
-		// for(int i = 0; i <20000; i++);
+		while((*(uart_status_register) & 1)!=0);
+		*(uart_data_register) = *(str++);
+		for(int i = 0; i <200; i++){
+			__asm__("nop");
+		}
 	}
+}
+
+char getchar()
+{
+	for(int i = 0; i <200; i++){
+		__asm__("nop");
+	}
+	while ((*(uart_status_register) & 2)==0);
+	return *(uart_data_register);
 }
 
 int main(void) {
  while(1){
-	*((unsigned int *)0x2000) = 0xff;
-	sort();
-	*((unsigned int *)0x2000) = 0x00;
-	sort();
-	// char *hello = "hello, world\n";
-	// print(hello);
+	// *((unsigned int *)0x2000) = 0xff;
+	// sort();
+	// *((unsigned int *)0x2000) = 0x00;
+	// sort();
+	int temp = 0;
+	char *hello = (char *)&temp;
+	*hello = getchar();
+	print(hello);
+	// char a = getchar();
+	// print(&a)
  }
 }
