@@ -13,7 +13,7 @@ INIT-SF		= init-sf
 
 INCLUDE_DIR = ../include
 
-OPTFLAGS	= -O2
+OPTFLAGS	= -O0
 CFLAGS		= -march=rv32i -mabi=ilp32 $(TARGET-ARCH-FLAGS) -Wall
 ASFLAGS		= --march=rv32i --mabi=ilp32
 INCLUDES	= -I$(INCLUDE_DIR)
