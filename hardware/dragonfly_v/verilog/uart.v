@@ -67,7 +67,7 @@ module uart (
 			busy <= 0;
 		end
 
-		if (read_enable && select) begin
+		if (read_enable && select && (~address[0])) begin
 			rx_data_taken <= 1'b1;
 		end else if (~rx_data_ready_out) begin
 			rx_data_taken <= 1'b0;
@@ -143,6 +143,6 @@ module uart (
 	wire [15:0] tx_data = {7'b1111111,send_data_reg,1'b0};
 	assign uart_tx = tx_data[bit_counter_send];
 
-	assign data_out = address[0] ? {6'b0,rx_data_ready_out, busy} : receive_data_reg; //read: register 0 = data register, 1 = status register
+	assign data_out = address[0] ? {6'b0,(rx_data_ready_out & (~rx_data_taken)), busy} : receive_data_reg; //read: register 0 = data register, 1 = status register
 
 endmodule
