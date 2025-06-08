@@ -125,6 +125,7 @@ module top(
     wire led_select = io_select & (~data_address[2]);   //address 0x2000
     wire uart_select = io_select & (data_address[2]);   //address 0x2004
 
+`ifdef USE_UART
     wire [7:0] uart_data_out;
 
     uart uart(
@@ -141,6 +142,10 @@ module top(
     );
 
     assign core_data_in = io_select ? {24'b0,uart_data_out} : mem_data_out; //uart occupies the entire io space
+`else
+    assign core_data_in = mem_data_out;
+    assign uart_tx = 1'b0;
+`endif
 
     /*
      * LED module
