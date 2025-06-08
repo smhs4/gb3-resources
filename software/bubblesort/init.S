@@ -20,3 +20,4 @@ init:
 	xori 	a4,a4,255
 	sw 		a4, 0(a5) # 
 	j .LC1
+	.include "routines.s"
