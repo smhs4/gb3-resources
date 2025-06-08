@@ -8,7 +8,7 @@ module data_memory(
     input   [2:0]   mode,
     input   [`kDATA_MEMORY_SIZE+1:0]  address,
     input   [31:0]  data_in,
-    output  [31:0]  data_out,
+    output  [31:0]  data_out
 );
 
 	reg [31:0]		data_memory[0:2**`kDATA_MEMORY_SIZE-1];

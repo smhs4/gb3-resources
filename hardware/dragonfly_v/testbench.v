@@ -1,7 +1,7 @@
 `timescale 1ns/1ns
 
 module testbench();
-    wire        led;            //blinky led
+    reg  [7:0]       led;            //blinky led
     wire        reset;
 
     wire        uart_rx = 1'b0; //uart receive into fpga from bluetooth/FT2232
@@ -12,12 +12,13 @@ module testbench();
     wire        uncore_clock;
 
     // Address and data buses
-    wire [31:0] data_core_to_mem;
-    wire [31:0] data_mem_to_core;
+    wire [31:0] core_data_out;
+    wire [31:0] core_data_in;
     wire [31:0] instruction_mem_to_core;
     wire [31:0] instruction_address;
     wire [31:0] data_address;
     wire        data_write_enable;
+    wire        data_read_enable;
     wire [2:0]  data_mode;
 
     wire [31:0] io_address;
@@ -28,7 +29,7 @@ module testbench();
     reg [2:0] reset_counter;
 
 	initial begin
-		// $dumpoff;
+		$dumpoff;
 		$dumpfile ("proc_sim.vcd");
 		$dumpvars;
         core_clock <=0;
@@ -54,16 +55,8 @@ module testbench();
 	always @(posedge core_clock) begin
         if (reset_counter[2]) reset_counter <=reset_counter-1;
 		clk_counter <= clk_counter+1;
-        if (clk_counter > 32'h1000) begin
+        if (clk_counter > 32'h100000) begin
             $finish;
-        end
-        if (io_write_enable) begin
-            case (io_address)
-                32'h2010: $write("%c",io_data[7:0]);
-                32'h2004: $dumpon;
-                32'h2008: $finish;
-                default: ;
-            endcase
         end
 	end
 
@@ -75,10 +68,11 @@ module testbench();
         .instruction_address(instruction_address),
         .instruction_in(instruction_mem_to_core),
         .data_address(data_address),
-        .data_out(data_core_to_mem),
-        .data_in(data_mem_to_core),
+        .data_out(core_data_out),
+        .data_in(core_data_in),
         .data_mode(data_mode),
-        .data_write_enable(data_write_enable)
+        .data_write_enable(data_write_enable),
+        .data_read_enable(data_read_enable)
     );
 
     instruction_memory instruction_memory(
@@ -88,16 +82,32 @@ module testbench();
         .out(instruction_mem_to_core)
     );
 
+    wire io_select = data_address[13];
+    wire [31:0] mem_data_out;
+
     data_memory data_memory(
         .clock(core_clock),
-        .address(data_address),
-        .data_in(data_core_to_mem),
-        .data_out(data_mem_to_core),
+        .select(~io_select),            //memory occupies even half of every 16KiB (0-8191, 16384-24575, etc.) within each 8K memory chunk two repeats of 4K memory exists
         .write_enable(data_write_enable),
+        .read_enable(data_read_enable),
         .mode(data_mode),
-        .addr_reg(io_address),
-        .write_data_reg(io_data),
-        .write_enable_reg(io_write_enable)
+        .address(data_address[11:0]),
+        .data_in(core_data_out),
+        .data_out(mem_data_out)
     );
+
+    assign core_data_in = io_select ? {32'b0} : mem_data_out; //uart always idle, never have data in
+
+    always @(negedge core_clock) begin
+        if (data_write_enable) begin
+            case (data_address)
+                32'h2000: led <= core_data_out[7:0];
+                32'h2004: $write("%c",core_data_out[7:0]);
+                32'h2010: $dumpon;
+                32'h2008: $finish;
+                default: ;
+            endcase
+        end
+    end
 
 endmodule

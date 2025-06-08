@@ -76,7 +76,7 @@ module alu(
 
 	reg [31:0] logic_result;
 	reg [31:0] shift_logic_result;
-
+`ifdef USE_DSP
 	/* DSP module */ 
 	wire carry_out;
 	wire sub = |arithmetic_select;
@@ -93,7 +93,7 @@ module alu(
 		.sub(sub),
 		.hold(1'b0)
 	);
-
+`endif
 	
 
 	always @(*) begin			//conbinational always
@@ -112,14 +112,22 @@ module alu(
 			default:	shift_logic_result = 32'bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;	//should never happen
 		endcase
 		case (arithmetic_select)
+`ifdef USE_DSP
 			`ALU_SELECT_ADD,
 			`ALU_SELECT_SUB: alu_result = dsp_out;
 			`ALU_SELECT_SLT_U: alu_result = ~carry_out ? 32'b1 : 32'b0;
+`else
+			`ALU_SELECT_ADD: alu_result = A + B;
+			`ALU_SELECT_SUB: alu_result = A - B;
+			`ALU_SELECT_SLT_U: alu_result = (compare_A < compare_B) ? 32'b1 : 32'b0;
+`endif
 			`ALU_SELECT_LOGIC_SHIFT: alu_result = shift_logic_result;
 			default:	alu_result = 32'bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;	//should never happen
 		endcase
 	end
-
+`ifdef USE_DSP
 	assign branch_enable = ((is_eq_compare) ? (A==B) : ~carry_out) ^ (invert_branch_condition);
-
+`else
+	assign branch_enable = ((is_eq_compare) ? (A==B) : (compare_A < compare_B)) ^ (invert_branch_condition);
+`endif
 endmodule
