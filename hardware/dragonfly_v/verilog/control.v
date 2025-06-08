@@ -76,6 +76,14 @@ module control(
 	// output reg Lui;
 	// output reg Auipc;
 	// output reg Fence;
+`ifdef SIMULATION
+	reg [31:0] branch_counter;
+	reg [31:0] branch_counter_no_flush;
+	initial begin
+		branch_counter = 0;
+		branch_counter_no_flush = 0;
+	end
+`endif
 
 	output Jal;
 	output id_branch;
@@ -98,12 +106,19 @@ module control(
 			Branch <= ((opcode[6]) & (~opcode[4]) & (~opcode[2])) & (~flush);//confirmed1x0x0 matching 10000 (unknown) 10010 (unknown) 11000 (BRANCH) 11010 (unknown)
 			ALUSrc <= (~opcode[5]) | opcode[2];//confirmed
 
-
 			Jalr <= ((opcode[6]) & (opcode[5]) & (~opcode[4]) & (~opcode[3]) & (opcode[2])) & (~flush);		//11001 JALR
 			// Lui <= (~opcode[6]) & (opcode[5]) & (opcode[4]) & (~opcode[3]) & (opcode[2]);		//01101 LUI
 			// Auipc <= (~opcode[6]) & (~opcode[5]) & (opcode[4]) & (~opcode[3]) & (opcode[2]);	//00101 AUIPC
 			// Fence <= (~opcode[5]) & opcode[3] & (opcode[2]);
 			ex_is_pc <= opcode[2] & (~(opcode[5] & opcode[4]));
+`ifdef SIMULATION
+			if ((opcode[6]) & (~opcode[4]) & (~opcode[2])) begin
+				branch_counter = branch_counter+1;
+			end
+			if (((opcode[6]) & (~opcode[4]) & (~opcode[2])) & (~flush)) begin
+				branch_counter_no_flush = branch_counter_no_flush+1;
+			end
+`endif
 		end
 	end
 

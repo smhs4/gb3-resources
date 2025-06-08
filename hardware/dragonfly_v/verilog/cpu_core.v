@@ -86,8 +86,18 @@ module cpu_core(
                                                                                 //flush if branch enable is different from expected
 
     wire [31:0] ex_pc;
+`ifdef SIMULATION
+    reg [31:0] mispredict_counter;
+    initial begin
+        mispredict_counter = 0;
+    end
 
-
+    always @(posedge core_clock) begin
+        if (ex_is_branch & (ex_should_branch ^ ex_branch_enable)) begin
+            mispredict_counter = mispredict_counter+1;
+        end
+    end
+`endif
 
     wire [31:0]     ex_alu_A = ex_is_pc_instruction ? ex_pc : ex_rs1_data;
     wire [31:0]     ex_alu_B = ex_is_imm_instruction ? ex_imm : ex_rs2_data;
