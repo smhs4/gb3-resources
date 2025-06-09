@@ -29,7 +29,7 @@ module testbench();
     reg [2:0] reset_counter;
 
 	initial begin
-		$dumpoff;
+		// $dumpoff;
 		$dumpfile ("proc_sim.vcd");
 		$dumpvars;
         core_clock <=0;
@@ -75,23 +75,42 @@ module testbench();
         .data_read_enable(data_read_enable)
     );
 
+    wire [31:0] instruction_memory_out;
+
+    wire [31:0] data_instruction_out;
+    reg  [31:0] data_instruction_reg;
+
+    always @(negedge core_clock) begin
+        data_instruction_reg <= mem_data_out;
+    end
+
+    assign data_instruction_out = core_clock ? mem_data_out : data_instruction_reg;
+
+    reg instruction_source;
+    always @(posedge core_clock) begin
+        instruction_source <= instruction_address[12];
+    end
+
+    assign instruction_mem_to_core = instruction_source ? data_instruction_out : instruction_memory_out;
+
+
     instruction_memory instruction_memory(
         .clock(core_clock),
         .reset(reset),
         .addr(instruction_address),
-        .out(instruction_mem_to_core)
+        .out(instruction_memory_out)
     );
 
     wire io_select = data_address[13];
     wire [31:0] mem_data_out;
 
     data_memory data_memory(
-        .clock(core_clock),
+        .clock(uncore_clock),
         .select(~io_select),            //memory occupies even half of every 16KiB (0-8191, 16384-24575, etc.) within each 8K memory chunk two repeats of 4K memory exists
-        .write_enable(data_write_enable),
+        .write_enable(data_write_enable & core_clock),
         .read_enable(data_read_enable),
-        .mode(data_mode),
-        .address(data_address[11:0]),
+        .mode(core_clock ? data_mode : 3'b010),     //word read if instruction fetch
+        .address(core_clock ? data_address[11:0] : {instruction_address[11:2],2'b0}),
         .data_in(core_data_out),
         .data_out(mem_data_out)
     );

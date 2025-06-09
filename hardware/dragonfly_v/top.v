@@ -12,8 +12,8 @@ module top(
     output          uart_tx;        //uart transmit out from fpga to bluetooth/FT2232
 
     wire source_clock;
-    wire core_clock;
-    // wire uncore_clock;
+    reg core_clock;
+    wire uncore_clock;
 
     wire [31:0] core_data_out;
     wire [31:0] core_data_in;
@@ -29,8 +29,11 @@ module top(
     reg [2:0] reset_counter;
     reg [2:0] led_counter;
 
+    reg [2:0] core_reset_counter;
+
     initial begin
         reset_counter = 3'b111;
+        core_reset_counter = 3'b000;
     end
 
     always @(posedge core_clock) begin
@@ -42,7 +45,16 @@ module top(
 
     assign reset = reset_counter[2] | (~locked);
 
-	SB_HFOSC #(.CLKHF_DIV("0b00")) OSCInst0 (
+`ifdef NO_PLL
+	SB_HFOSC #(.CLKHF_DIV("0b11")) OSCInst0 (
+		.CLKHFEN(1'b1),
+		.CLKHFPU(1'b1),
+		.CLKHF(uncore_clock)
+	);
+
+    assign locked = 1'b1;
+`else
+	SB_HFOSC #(.CLKHF_DIV("0b10")) OSCInst0 (
 		.CLKHFEN(1'b1),
 		.CLKHFPU(1'b1),
 		.CLKHF(source_clock)
@@ -50,42 +62,20 @@ module top(
 
     pll pll(
         .clock_in(source_clock),
-        .clock_out(core_clock),
+        .clock_out(uncore_clock),
         .locked(locked)
     );
-	// SB_PLL40_CORE #(
-    //     .FEEDBACK_PATH("SIMPLE"),
-    //     .DIVR(4'b0010),
-    //     .DIVF(7'b0100111),
-    //     .DIVQ(3'b101),
-    //     .FILTER_RANGE(3'b001),
-    //     .PLLOUT_SELECT("GENCLK"),  // use PLLOUTCORE
-    //     .DELAY_ADJUSTMENT_MODE_FEEDBACK("FIXED"),
-    //     .DELAY_ADJUSTMENT_MODE_RELATIVE("FIXED"),
-    //     .FDA_FEEDBACK(4'b0000),
-    //     .FDA_RELATIVE(4'b0000),
-    //     .SHIFTREG_DIV_MODE(1'b0)
-    // ) pll_inst (
-    //     .REFERENCECLK(source_clock),     // 48 MHz input
-    //     .PLLOUTCORE(core_clock),      // 20 MHz output
-    //     .RESETB(1'b1),           // keep high when not resetting
-    //     .BYPASS(1'b0),
-    //     .LOCK(locked)              // goes high when PLL is locked
-    // );
-    // assign uncore_clock = source_clock;
-    // assign core_clock = source_clock;
+`endif
     /*
      * The craziest clock system you will ever see
 
      * core_clock:      ___/‾‾‾‾‾‾‾‾‾\_________/‾‾‾‾‾‾‾‾‾\_________/‾‾...
      * uncore_clock:    _/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾...
      */
-
-    // always @(posedge uncore_clock) begin
-    //     core_clock = ~core_clock;
-    // end
-
-    // assign uart_tx = core_clock;
+    
+    always @(posedge uncore_clock) begin
+        core_clock = ~core_clock;
+    end
 
     cpu_core cpu(
         .core_clock(core_clock),
@@ -100,24 +90,47 @@ module top(
         .data_read_enable(data_read_enable)
     );
 
+    wire io_select = data_address[13];
+    wire [31:0] mem_data_out;
+    wire [31:0] instruction_memory_out;
+
+    wire [31:0] data_instruction_out;
+    reg  [31:0] data_instruction_reg;
+
+    initial begin
+        data_instruction_reg <= 32'b0;
+        instruction_source <=1'b0;
+    end
+
+    always @(negedge core_clock) begin
+        data_instruction_reg <= mem_data_out;
+    end
+
+    assign data_instruction_out = core_clock ? mem_data_out : data_instruction_reg;
+
+    reg instruction_source;
+    always @(posedge core_clock) begin
+        instruction_source <= instruction_address[12];
+    end
+
+    assign instruction_mem_to_core = instruction_memory_out;
+
     instruction_memory instruction_memory(
         .clock(core_clock),
         .reset(reset),
         .addr(instruction_address),
-        .out(instruction_mem_to_core)
+        .out(instruction_memory_out)
     );
 
-    wire io_select = data_address[13];
-    wire [31:0] mem_data_out;
-    reg         led_reg;
 
     data_memory data_memory(
-        .clock(core_clock),
+        .core_clock(core_clock),
+        .clock(uncore_clock),
         .select(~io_select),            //memory occupies even half of every 16KiB (0-8191, 16384-24575, etc.) within each 8K memory chunk two repeats of 4K memory exists
-        .write_enable(data_write_enable),
+        .write_enable(data_write_enable & core_clock),
         .read_enable(data_read_enable),
         .mode(data_mode),
-        .address(data_address[11:0]),
+        .address({(core_clock ? data_address[11:2] : instruction_address[11:2]),data_address[1:0]}),
         .data_in(core_data_out),
         .data_out(mem_data_out)
     );
@@ -150,6 +163,7 @@ module top(
     /*
      * LED module
      */
+    reg         led_reg;
     always @(negedge core_clock) begin
         if(data_write_enable && led_select) begin
             led_reg <= core_data_out[0];
