@@ -59,6 +59,7 @@ module regfile(
 	 */
 	reg [31:0]	regfile[31:0];
 
+`ifdef SIMULATION
 	wire [31:0] ra = regfile[1];
 
 	wire [31:0] a0 = regfile[10];
@@ -67,7 +68,7 @@ module regfile(
 	wire [31:0] a3 = regfile[13];
 	wire [31:0] a4 = regfile[14];
 	wire [31:0] a5 = regfile[15];
-
+`endif
 	/*
 	 *	registers for forwarding
 	 */

@@ -48,14 +48,14 @@ module testbench();
 	#1 source_clock = ~source_clock;
 
     always @(posedge uncore_clock) begin
-        core_clock = ~core_clock;
+        core_clock <= ~core_clock;
     end
     assign uncore_clock = source_clock;
     
 	always @(posedge core_clock) begin
         if (reset_counter[2]) reset_counter <=reset_counter-1;
 		clk_counter <= clk_counter+1;
-        if (clk_counter > 32'h100000) begin
+        if (clk_counter > 32'h100) begin
             $finish;
         end
 	end
@@ -75,16 +75,26 @@ module testbench();
         .data_read_enable(data_read_enable)
     );
 
+    wire io_select = data_address[13];
+    wire [31:0] mem_data_out;
     wire [31:0] instruction_memory_out;
+    wire [31:0] raw_data_out;
 
     wire [31:0] data_instruction_out;
     reg  [31:0] data_instruction_reg;
 
-    always @(negedge core_clock) begin
-        data_instruction_reg <= mem_data_out;
+    initial begin
+        data_instruction_reg <= 32'b0;
+        instruction_source <=1'b0;
     end
 
-    assign data_instruction_out = core_clock ? mem_data_out : data_instruction_reg;
+    always @(posedge uncore_clock) begin
+        if (core_clock == 1'b1) begin
+            data_instruction_reg <= raw_data_out;
+        end
+    end
+
+    assign data_instruction_out = core_clock ? raw_data_out : data_instruction_reg;
 
     reg instruction_source;
     always @(posedge core_clock) begin
@@ -93,7 +103,6 @@ module testbench();
 
     assign instruction_mem_to_core = instruction_source ? data_instruction_out : instruction_memory_out;
 
-
     instruction_memory instruction_memory(
         .clock(core_clock),
         .reset(reset),
@@ -101,18 +110,16 @@ module testbench();
         .out(instruction_memory_out)
     );
 
-    wire io_select = data_address[13];
-    wire [31:0] mem_data_out;
 
     data_memory data_memory(
         .clock(uncore_clock),
         .select(~io_select),            //memory occupies even half of every 16KiB (0-8191, 16384-24575, etc.) within each 8K memory chunk two repeats of 4K memory exists
         .write_enable(data_write_enable & core_clock),
-        .read_enable(data_read_enable),
-        .mode(core_clock ? data_mode : 3'b010),     //word read if instruction fetch
-        .address(core_clock ? data_address[11:0] : {instruction_address[11:2],2'b0}),
+        .mode(data_mode),
+        .address({(core_clock ? data_address[11:2] : instruction_address[11:2]),data_address[1:0]}),
         .data_in(core_data_out),
-        .data_out(mem_data_out)
+        .data_out(mem_data_out),
+        .read_word_buf(raw_data_out)
     );
 
     assign core_data_in = io_select ? {32'b0} : mem_data_out; //uart always idle, never have data in

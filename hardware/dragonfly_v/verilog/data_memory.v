@@ -1,15 +1,14 @@
 `define kDATA_MEMORY_SIZE 10
 
 module data_memory(
-    input           core_clock,
     input           clock,
     input           select,
     input           write_enable,
-    input           read_enable,
     input   [2:0]   mode,
     input   [`kDATA_MEMORY_SIZE+1:0]  address,
     input   [31:0]  data_in,
-    output  reg [31:0]  data_out
+    output  reg [31:0]  data_out,
+    output reg [31:0]  read_word_buf
 );
 
 	reg [31:0]		data_memory[0:2**`kDATA_MEMORY_SIZE-1];
@@ -24,7 +23,6 @@ module data_memory(
     wire [3:0]   write_mask = mode[1] ? 4'b1111 : ((mode[0]) ? ((address[1]) ? 4'b1100 : 4'b0011) : (4'b0001 << (address[1:0])));
     wire [31:0]  write_buf = mode[1] ? data_in : ((mode[0]) ? {2{data_in[15:0]}} : {4{data_in[7:0]}});
     
-    reg [31:0]  read_word_buf;
 
     wire [9:0] word_address = address[`kDATA_MEMORY_SIZE+1:2];
 

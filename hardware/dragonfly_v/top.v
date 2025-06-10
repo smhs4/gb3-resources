@@ -3,6 +3,7 @@ module top(
     uart_rx,
     uart_tx,
     // reset
+    output spare_c3
 );
 
     output      led_out;                //blinky led_out
@@ -36,24 +37,8 @@ module top(
         core_reset_counter = 3'b000;
     end
 
-    always @(posedge core_clock) begin
-        led_counter <= led_counter+1;
-        if (reset_counter[2]) reset_counter <=reset_counter-1;
-    end
-
     wire locked;
 
-    assign reset = reset_counter[2] | (~locked);
-
-`ifdef NO_PLL
-	SB_HFOSC #(.CLKHF_DIV("0b11")) OSCInst0 (
-		.CLKHFEN(1'b1),
-		.CLKHFPU(1'b1),
-		.CLKHF(uncore_clock)
-	);
-
-    assign locked = 1'b1;
-`else
 	SB_HFOSC #(.CLKHF_DIV("0b10")) OSCInst0 (
 		.CLKHFEN(1'b1),
 		.CLKHFPU(1'b1),
@@ -63,9 +48,10 @@ module top(
     pll pll(
         .clock_in(source_clock),
         .clock_out(uncore_clock),
+        .clock_out_half(core_clock),
         .locked(locked)
     );
-`endif
+
     /*
      * The craziest clock system you will ever see
 
@@ -73,9 +59,16 @@ module top(
      * uncore_clock:    _/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾...
      */
     
-    always @(posedge uncore_clock) begin
-        core_clock = ~core_clock;
+    // always @(posedge uncore_clock) begin
+    //     core_clock <= ~core_clock;
+    // end
+
+    always @(posedge core_clock) begin
+        led_counter <= led_counter+1;
+        if (reset_counter[2]) reset_counter <=reset_counter-1;
     end
+
+    assign reset = reset_counter[2] | (~locked);
 
     cpu_core cpu(
         .core_clock(core_clock),
@@ -93,6 +86,7 @@ module top(
     wire io_select = data_address[13];
     wire [31:0] mem_data_out;
     wire [31:0] instruction_memory_out;
+    wire [31:0] raw_data_out;
 
     wire [31:0] data_instruction_out;
     reg  [31:0] data_instruction_reg;
@@ -102,18 +96,20 @@ module top(
         instruction_source <=1'b0;
     end
 
-    always @(negedge core_clock) begin
-        data_instruction_reg <= mem_data_out;
+    always @(posedge uncore_clock) begin
+        if (core_clock == 1'b1) begin
+            data_instruction_reg <= raw_data_out;
+        end
     end
 
-    assign data_instruction_out = core_clock ? mem_data_out : data_instruction_reg;
+    assign data_instruction_out = core_clock ? raw_data_out : data_instruction_reg;
 
     reg instruction_source;
     always @(posedge core_clock) begin
         instruction_source <= instruction_address[12];
     end
 
-    assign instruction_mem_to_core = instruction_memory_out;
+    assign instruction_mem_to_core = instruction_source ? data_instruction_out : instruction_memory_out;
 
     instruction_memory instruction_memory(
         .clock(core_clock),
@@ -124,15 +120,14 @@ module top(
 
 
     data_memory data_memory(
-        .core_clock(core_clock),
         .clock(uncore_clock),
         .select(~io_select),            //memory occupies even half of every 16KiB (0-8191, 16384-24575, etc.) within each 8K memory chunk two repeats of 4K memory exists
         .write_enable(data_write_enable & core_clock),
-        .read_enable(data_read_enable),
         .mode(data_mode),
         .address({(core_clock ? data_address[11:2] : instruction_address[11:2]),data_address[1:0]}),
         .data_in(core_data_out),
-        .data_out(mem_data_out)
+        .data_out(mem_data_out),
+        .read_word_buf(raw_data_out)
     );
 
     wire led_select = io_select & (~data_address[2]);   //address 0x2000
@@ -157,7 +152,8 @@ module top(
     assign core_data_in = io_select ? {24'b0,uart_data_out} : mem_data_out; //uart occupies the entire io space
 `else
     assign core_data_in = mem_data_out;
-    assign uart_tx = 1'b0;
+    assign uart_tx = core_clock;
+    assign spare_c3 = uncore_clock;
 `endif
 
     /*
@@ -170,5 +166,5 @@ module top(
         end
     end
 
-    assign led_out = led_reg & (&led_counter);
+    assign led_out = led_reg;// & (&led_counter);
 endmodule

@@ -13,7 +13,7 @@ init:
 	#flash the LED on real hardware
 	li  	a4,255
 .LC1:
-	li		a3,1000000
+	li		a3,100000
 .LC0:
 	addi	a3,a3,-1
 	bne 	a3,zero,.LC0

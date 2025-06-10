@@ -1106,129 +1106,123 @@ main:
 	sw	s0,1096(sp)	#,
 	addi	s0,sp,1104	#,,
 # bubblesort.c:9: 	unsigned char bsort_input[] = {
-	lui	a5,%hi(.LC0)	# tmp92,
-	addi	a4,s0,-1092	#, tmp93,
-	addi	a5,a5,%lo(.LC0)	# tmp94, tmp92,
-	li	a3,1062		# tmp95,
-	mv	a2,a3	#, tmp95
-	mv	a1,a5	#, tmp94
-	mv	a0,a4	#, tmp93
+	lui	a5,%hi(.LC0)	# tmp91,
+	addi	a4,s0,-1092	#, tmp92,
+	addi	a5,a5,%lo(.LC0)	# tmp93, tmp91,
+	li	a3,1062		# tmp94,
+	mv	a2,a3	#, tmp94
+	mv	a1,a5	#, tmp93
+	mv	a0,a4	#, tmp92
 	call	memcpy		#
-# bubblesort.c:12: 	const int bsort_input_len = 0x426;
-	li	a5,1062		# tmp97,
-	sw	a5,-28(s0)	# tmp97, bsort_input_len
-# bubblesort.c:15: 	int maxindex = bsort_input_len - 1;
-	lw	a5,-28(s0)		# tmp99, bsort_input_len
-	addi	a5,a5,-1	#, tmp98, tmp99
-	sw	a5,-24(s0)	# tmp98, maxindex
-# bubblesort.c:16: 	while (maxindex > 0) {
+# bubblesort.c:13: 	const int bsort_input_len = 0x426;
+	li	a5,1062		# tmp96,
+	sw	a5,-28(s0)	# tmp96, bsort_input_len
+# bubblesort.c:16: 	int maxindex = bsort_input_len - 1;
+	lw	a5,-28(s0)		# tmp98, bsort_input_len
+	addi	a5,a5,-1	#, tmp97, tmp98
+	sw	a5,-24(s0)	# tmp97, maxindex
+# bubblesort.c:17: 	while (maxindex > 0) {
 	j	.L2		#
 .L6:
-# bubblesort.c:18: 		for (i = 0; i < maxindex; i++) {
+# bubblesort.c:19: 		for (i = 0; i < maxindex; i++) {
 	sw	zero,-20(s0)	#, i
-# bubblesort.c:18: 		for (i = 0; i < maxindex; i++) {
+# bubblesort.c:19: 		for (i = 0; i < maxindex; i++) {
 	j	.L3		#
 .L5:
-# bubblesort.c:19: 			if (bsort_input[i] > bsort_input[i + 1]) {
-	lw	a5,-20(s0)		# tmp101, i
-	addi	a4,s0,-16	#, tmp135,
-	add	a5,a4,a5	# tmp101, tmp100, tmp135
+# bubblesort.c:20: 			if (bsort_input[i] > bsort_input[i + 1]) {
+	lw	a5,-20(s0)		# tmp100, i
+	addi	a4,s0,-16	#, tmp132,
+	add	a5,a4,a5	# tmp100, tmp99, tmp132
 	lbu	a4,-1076(a5)	# _1, bsort_input
-# bubblesort.c:19: 			if (bsort_input[i] > bsort_input[i + 1]) {
-	lw	a5,-20(s0)		# tmp102, i
-	addi	a5,a5,1	#, _2, tmp102
-# bubblesort.c:19: 			if (bsort_input[i] > bsort_input[i + 1]) {
-	addi	a3,s0,-16	#, tmp136,
-	add	a5,a3,a5	# _2, tmp103, tmp136
+# bubblesort.c:20: 			if (bsort_input[i] > bsort_input[i + 1]) {
+	lw	a5,-20(s0)		# tmp101, i
+	addi	a5,a5,1	#, _2, tmp101
+# bubblesort.c:20: 			if (bsort_input[i] > bsort_input[i + 1]) {
+	addi	a3,s0,-16	#, tmp133,
+	add	a5,a3,a5	# _2, tmp102, tmp133
 	lbu	a5,-1076(a5)	# _3, bsort_input
-# bubblesort.c:19: 			if (bsort_input[i] > bsort_input[i + 1]) {
+# bubblesort.c:20: 			if (bsort_input[i] > bsort_input[i + 1]) {
 	bleu	a4,a5,.L4	#, _1, _3,
-# bubblesort.c:21: 				bsort_input[i] ^= bsort_input[i + 1];
-	lw	a5,-20(s0)		# tmp105, i
-	addi	a4,s0,-16	#, tmp137,
-	add	a5,a4,a5	# tmp105, tmp104, tmp137
+# bubblesort.c:22: 				bsort_input[i] ^= bsort_input[i + 1];
+	lw	a5,-20(s0)		# tmp104, i
+	addi	a4,s0,-16	#, tmp134,
+	add	a5,a4,a5	# tmp104, tmp103, tmp134
 	lbu	a4,-1076(a5)	# _4, bsort_input
-# bubblesort.c:21: 				bsort_input[i] ^= bsort_input[i + 1];
-	lw	a5,-20(s0)		# tmp106, i
-	addi	a5,a5,1	#, _5, tmp106
-# bubblesort.c:21: 				bsort_input[i] ^= bsort_input[i + 1];
-	addi	a3,s0,-16	#, tmp138,
-	add	a5,a3,a5	# _5, tmp107, tmp138
+# bubblesort.c:22: 				bsort_input[i] ^= bsort_input[i + 1];
+	lw	a5,-20(s0)		# tmp105, i
+	addi	a5,a5,1	#, _5, tmp105
+# bubblesort.c:22: 				bsort_input[i] ^= bsort_input[i + 1];
+	addi	a3,s0,-16	#, tmp135,
+	add	a5,a3,a5	# _5, tmp106, tmp135
 	lbu	a5,-1076(a5)	# _6, bsort_input
-# bubblesort.c:21: 				bsort_input[i] ^= bsort_input[i + 1];
-	xor	a5,a4,a5	# _6, tmp108, _4
-	andi	a4,a5,0xff	# _7, tmp108
-	lw	a5,-20(s0)		# tmp110, i
-	addi	a3,s0,-16	#, tmp139,
-	add	a5,a3,a5	# tmp110, tmp109, tmp139
+# bubblesort.c:22: 				bsort_input[i] ^= bsort_input[i + 1];
+	xor	a5,a4,a5	# _6, tmp107, _4
+	andi	a4,a5,0xff	# _7, tmp107
+	lw	a5,-20(s0)		# tmp109, i
+	addi	a3,s0,-16	#, tmp136,
+	add	a5,a3,a5	# tmp109, tmp108, tmp136
 	sb	a4,-1076(a5)	# _7, bsort_input
-# bubblesort.c:22: 				bsort_input[i + 1] ^= bsort_input[i];
-	lw	a5,-20(s0)		# tmp111, i
-	addi	a5,a5,1	#, _8, tmp111
-	addi	a4,s0,-16	#, tmp140,
-	add	a5,a4,a5	# _8, tmp112, tmp140
+# bubblesort.c:23: 				bsort_input[i + 1] ^= bsort_input[i];
+	lw	a5,-20(s0)		# tmp110, i
+	addi	a5,a5,1	#, _8, tmp110
+	addi	a4,s0,-16	#, tmp137,
+	add	a5,a4,a5	# _8, tmp111, tmp137
 	lbu	a3,-1076(a5)	# _9, bsort_input
-# bubblesort.c:22: 				bsort_input[i + 1] ^= bsort_input[i];
-	lw	a5,-20(s0)		# tmp114, i
-	addi	a4,s0,-16	#, tmp141,
-	add	a5,a4,a5	# tmp114, tmp113, tmp141
+# bubblesort.c:23: 				bsort_input[i + 1] ^= bsort_input[i];
+	lw	a5,-20(s0)		# tmp113, i
+	addi	a4,s0,-16	#, tmp138,
+	add	a5,a4,a5	# tmp113, tmp112, tmp138
 	lbu	a4,-1076(a5)	# _10, bsort_input
-# bubblesort.c:22: 				bsort_input[i + 1] ^= bsort_input[i];
-	lw	a5,-20(s0)		# tmp115, i
-	addi	a5,a5,1	#, _11, tmp115
-	xor	a4,a3,a4	# _10, tmp116, _9
-	andi	a4,a4,0xff	# _12, tmp116
-	addi	a3,s0,-16	#, tmp142,
-	add	a5,a3,a5	# _11, tmp117, tmp142
+# bubblesort.c:23: 				bsort_input[i + 1] ^= bsort_input[i];
+	lw	a5,-20(s0)		# tmp114, i
+	addi	a5,a5,1	#, _11, tmp114
+	xor	a4,a3,a4	# _10, tmp115, _9
+	andi	a4,a4,0xff	# _12, tmp115
+	addi	a3,s0,-16	#, tmp139,
+	add	a5,a3,a5	# _11, tmp116, tmp139
 	sb	a4,-1076(a5)	# _12, bsort_input
-# bubblesort.c:23: 				bsort_input[i] ^= bsort_input[i + 1];
-	lw	a5,-20(s0)		# tmp119, i
-	addi	a4,s0,-16	#, tmp143,
-	add	a5,a4,a5	# tmp119, tmp118, tmp143
+# bubblesort.c:24: 				bsort_input[i] ^= bsort_input[i + 1];
+	lw	a5,-20(s0)		# tmp118, i
+	addi	a4,s0,-16	#, tmp140,
+	add	a5,a4,a5	# tmp118, tmp117, tmp140
 	lbu	a4,-1076(a5)	# _13, bsort_input
-# bubblesort.c:23: 				bsort_input[i] ^= bsort_input[i + 1];
-	lw	a5,-20(s0)		# tmp120, i
-	addi	a5,a5,1	#, _14, tmp120
-# bubblesort.c:23: 				bsort_input[i] ^= bsort_input[i + 1];
-	addi	a3,s0,-16	#, tmp144,
-	add	a5,a3,a5	# _14, tmp121, tmp144
+# bubblesort.c:24: 				bsort_input[i] ^= bsort_input[i + 1];
+	lw	a5,-20(s0)		# tmp119, i
+	addi	a5,a5,1	#, _14, tmp119
+# bubblesort.c:24: 				bsort_input[i] ^= bsort_input[i + 1];
+	addi	a3,s0,-16	#, tmp141,
+	add	a5,a3,a5	# _14, tmp120, tmp141
 	lbu	a5,-1076(a5)	# _15, bsort_input
-# bubblesort.c:23: 				bsort_input[i] ^= bsort_input[i + 1];
-	xor	a5,a4,a5	# _15, tmp122, _13
-	andi	a4,a5,0xff	# _16, tmp122
-	lw	a5,-20(s0)		# tmp124, i
-	addi	a3,s0,-16	#, tmp145,
-	add	a5,a3,a5	# tmp124, tmp123, tmp145
+# bubblesort.c:24: 				bsort_input[i] ^= bsort_input[i + 1];
+	xor	a5,a4,a5	# _15, tmp121, _13
+	andi	a4,a5,0xff	# _16, tmp121
+	lw	a5,-20(s0)		# tmp123, i
+	addi	a3,s0,-16	#, tmp142,
+	add	a5,a3,a5	# tmp123, tmp122, tmp142
 	sb	a4,-1076(a5)	# _16, bsort_input
 .L4:
-# bubblesort.c:18: 		for (i = 0; i < maxindex; i++) {
-	lw	a5,-20(s0)		# tmp126, i
-	addi	a5,a5,1	#, tmp125, tmp126
-	sw	a5,-20(s0)	# tmp125, i
+# bubblesort.c:19: 		for (i = 0; i < maxindex; i++) {
+	lw	a5,-20(s0)		# tmp125, i
+	addi	a5,a5,1	#, tmp124, tmp125
+	sw	a5,-20(s0)	# tmp124, i
 .L3:
-# bubblesort.c:18: 		for (i = 0; i < maxindex; i++) {
-	lw	a4,-20(s0)		# tmp127, i
-	lw	a5,-24(s0)		# tmp128, maxindex
-	blt	a4,a5,.L5	#, tmp127, tmp128,
-# bubblesort.c:27: 		maxindex--;
-	lw	a5,-24(s0)		# tmp130, maxindex
-	addi	a5,a5,-1	#, tmp129, tmp130
-	sw	a5,-24(s0)	# tmp129, maxindex
+# bubblesort.c:19: 		for (i = 0; i < maxindex; i++) {
+	lw	a4,-20(s0)		# tmp126, i
+	lw	a5,-24(s0)		# tmp127, maxindex
+	blt	a4,a5,.L5	#, tmp126, tmp127,
+# bubblesort.c:28: 		maxindex--;
+	lw	a5,-24(s0)		# tmp129, maxindex
+	addi	a5,a5,-1	#, tmp128, tmp129
+	sw	a5,-24(s0)	# tmp128, maxindex
 .L2:
-# bubblesort.c:16: 	while (maxindex > 0) {
-	lw	a5,-24(s0)		# tmp131, maxindex
-	bgtz	a5,.L6	#, tmp131,
-# bubblesort.c:31: 	*((unsigned int *)0x2010) = 0xff;
-	li	a5,8192		# tmp132,
-	addi	a5,a5,16	#, _17, tmp132
-# bubblesort.c:31: 	*((unsigned int *)0x2010) = 0xff;
-	li	a4,255		# tmp133,
-	sw	a4,0(a5)	# tmp133, *_17
-# bubblesort.c:36: 	return *((int *)bsort_input);
-	addi	a5,s0,-1092	#, bsort_input.0_18,
-# bubblesort.c:36: 	return *((int *)bsort_input);
-	lw	a5,0(a5)		# _35, MEM[(int *)bsort_input.0_18]
-# bubblesort.c:37: }
+# bubblesort.c:17: 	while (maxindex > 0) {
+	lw	a5,-24(s0)		# tmp130, maxindex
+	bgtz	a5,.L6	#, tmp130,
+# bubblesort.c:37: 	return *((int *)bsort_input);
+	addi	a5,s0,-1092	#, bsort_input.0_17,
+# bubblesort.c:37: 	return *((int *)bsort_input);
+	lw	a5,0(a5)		# _33, MEM[(int *)bsort_input.0_17]
+# bubblesort.c:38: }
 	mv	a0,a5	#, <retval>
 	lw	ra,1100(sp)		#,
 	lw	s0,1096(sp)		#,
