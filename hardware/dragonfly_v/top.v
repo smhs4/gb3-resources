@@ -39,7 +39,7 @@ module top(
 
     wire locked;
 
-	SB_HFOSC #(.CLKHF_DIV("0b10")) OSCInst0 (
+	SB_HFOSC #(.CLKHF_DIV("0b00")) OSCInst0 (
 		.CLKHFEN(1'b1),
 		.CLKHFPU(1'b1),
 		.CLKHF(source_clock)
@@ -150,6 +150,7 @@ module top(
     );
 
     assign core_data_in = io_select ? {24'b0,uart_data_out} : mem_data_out; //uart occupies the entire io space
+    assign spare_c3 = 1'b0;
 `else
     assign core_data_in = mem_data_out;
     assign uart_tx = core_clock;
@@ -166,5 +167,5 @@ module top(
         end
     end
 
-    assign led_out = led_reg;// & (&led_counter);
+    assign led_out = led_reg & (&led_counter);
 endmodule

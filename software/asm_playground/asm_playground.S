@@ -13,7 +13,9 @@
 	addi	a3,a3,-1
 	bne 	a3,zero,.LC2
 	xori 	a4,a4,255
-	sw 		a4, 0(a5) # 
+	sw 		a4, 0(a5)
+    li      a2,'U'
+    sw      a2, 4(a5)
     # j .LC0
 # .LC1:
 	j .LC1

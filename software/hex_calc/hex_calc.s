@@ -250,8 +250,6 @@ main:
 	sw	s0,40(sp)	#,
 	sw	s1,36(sp)	#,
 	addi	s0,sp,48	#,,
-# hex_calc.c:51: 	echo();
-	call	echo		#
 # hex_calc.c:52: 	print("\r\ntest\r\n");
 	lui	a5,%hi(.LC2)	# tmp94,
 	addi	a0,a5,%lo(.LC2)	#, tmp94,
@@ -372,7 +370,7 @@ main:
 # hex_calc.c:75: 	printhex(sum);
 	lw	a0,-36(s0)		#, sum
 	call	printhex		#
-	li	a5,0		# _52,
+	li	a5,0		# _51,
 # hex_calc.c:76: }
 	mv	a0,a5	#, <retval>
 	lw	ra,44(sp)		#,

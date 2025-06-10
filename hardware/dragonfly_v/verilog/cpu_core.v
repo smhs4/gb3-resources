@@ -19,9 +19,27 @@ module cpu_core(
     wire    [31:0]  id_jump_offset;
     wire    [31:0]  the_road_not_taken;
     wire    [31:0]  flush_target_pc = ex_is_jalr ? data_address : the_road_not_taken;
+`ifdef USE_DSP
+    wire    [31:0]  id_next_pc;
+    DSPAdd pc_adder(
+            .input1(id_pc),
+            .input2(32'h4),
+            .out(id_next_pc)
+        );
+`else
     wire    [31:0]  id_next_pc = id_pc + 4;
+`endif
     wire    [31:0]  id_target_pc = id_is_jump ? id_jump_target : id_next_pc;
+`ifdef USE_DSP
+    wire    [31:0]  id_jump_target;
+    DSPAdd pc_adder_2(
+            .input1(id_pc),
+            .input2(id_jump_offset),
+            .out(id_jump_target)
+        );
+`else
     wire    [31:0]  id_jump_target = id_pc + id_jump_offset;
+`endif
     assign instruction_address = ex_flush ?  flush_target_pc : id_target_pc;
 
 
@@ -222,8 +240,15 @@ module cpu_core(
         .branch_enable(ex_branch_enable)
     );
 
-
+`ifdef USE_DSP          //doesn't work somehow
+    DSPAdd mem_addr_adder(
+            .input1(ex_imm),
+            .input2(ex_rs1_data),
+            .out(data_address)
+        );
+`else
     assign data_address = ex_imm + ex_rs1_data;
+`endif
     assign data_out = ex_rs2_data;
 
 

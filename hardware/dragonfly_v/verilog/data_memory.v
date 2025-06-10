@@ -42,7 +42,7 @@ module data_memory(
     // magic, madness, heaven, sin
     always @(negedge clock) begin
         // data_out <= read_word_buf;
-        data_out[7:0] = read_word_buf[7:0];//(address[1]) ? ((address[0]) ? read_word_buf[31:24] : read_word_buf[23:16]) : ((address[0]) ? read_word_buf[15:8] : read_word_buf[7:0]);
+        data_out[7:0] = (address[1]) ? ((address[0]) ? read_word_buf[31:24] : read_word_buf[23:16]) : ((address[0]) ? read_word_buf[15:8] : read_word_buf[7:0]);
         data_out[15:8] = (mode[1] | mode[0]) ? ((address[1]) ? read_word_buf[31:24] : read_word_buf[15:8]) : {8{((mode[2]) ? 1'b0 : data_out[7])}};
         data_out[31:16] = (mode[1]) ? read_word_buf[31:16] : {16{(mode[2]) ? 1'b0 : ((mode[0]) ? data_out[15] : data_out[7])}};
     end

@@ -48,7 +48,7 @@ void echo()
 }
 
 int main(void) {
-	echo();
+	// echo();
 	print("\r\ntest\r\n");
 	printhex(0x12345678);
 	print("\r\nplease enter a 8 bit hex number: (fill top with zeros to exactly 8 digits)\r\n");
