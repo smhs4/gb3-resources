@@ -40,12 +40,11 @@
  *	RISC-V instruction memory
  */
 
-`define kINST_MEMORY_SIZE 9
+`define kINST_MEMORY_SIZE 8
 
 module instruction_memory(
 	input 				clock,
-	input				reset,
-	input 		[31:0]	addr,
+	input 		[`kINST_MEMORY_SIZE+1:0]	addr,
 	output reg 	[31:0]	out
 );
 	/*

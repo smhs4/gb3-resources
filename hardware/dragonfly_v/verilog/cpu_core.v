@@ -240,15 +240,7 @@ module cpu_core(
         .branch_enable(ex_branch_enable)
     );
 
-`ifdef USE_DSP          //doesn't work somehow
-    DSPAdd mem_addr_adder(
-            .input1(ex_imm),
-            .input2(ex_rs1_data),
-            .out(data_address)
-        );
-`else
     assign data_address = ex_imm + ex_rs1_data;
-`endif
     assign data_out = ex_rs2_data;
 
 
