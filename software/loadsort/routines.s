@@ -7,10 +7,6 @@
 	.globl	putchar
 	.type	putchar, @function
 putchar:        #a0 = character to be output
-	lui t1,20
-.wait_fixed:
-	addi t1,t1,-1
-	bnez t1,.wait_fixed
 	lui t1,2		#hex 2000, MMIO base address
 .wait_uart:
 	lbu	t0,5(t1)	#uart status register

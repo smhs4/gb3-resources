@@ -1,5 +1,6 @@
 module top(
-    led_out
+    led_out,
+    output uart_tx
 );
 
     output      led_out;                //blinky led_out
@@ -27,7 +28,7 @@ module top(
 
     wire locked;
 
-	SB_HFOSC #(.CLKHF_DIV("0b10")) OSCInst0 (
+	SB_HFOSC #(.CLKHF_DIV("0b01")) OSCInst0 (
 		.CLKHFEN(1'b1),
 		.CLKHFPU(1'b1),
 		.CLKHF(source_clock)
@@ -97,4 +98,5 @@ module top(
     end
 
     assign led_out = led_reg;// & (&led_counter);
+    assign uart_tx = core_clock;
 endmodule
