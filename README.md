@@ -1,3 +1,5 @@
+**This is Andy Hu's branch of GB3 project with completely re-written CPU core. The new core (under hardware/dragonfly_v/verilog) achieves higher performance than the reference design (under hardware/processor/verilog), while consuming less than half of logical resources and lower power**
+
 # gb3
 **Note that commands in this README.md are run either on your local host terminal, or on a Docker container terminal. We highlight where to run a command immediately prior to the command itself. Make sure that you take care to note this.**
 
